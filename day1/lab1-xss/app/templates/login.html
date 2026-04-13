@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Feedback Board - Login</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Feedback Board</span></div>
+<div class="container">
+  <div class="card text-center">
+    <h1>Sign In</h1>
+    <p>Access the internal feedback board</p>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    <form method="POST">
+      <label>Username</label>
+      <input type="text" name="username" required>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <button type="submit">Sign In</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mailbox - Email</title><link rel="stylesheet" href="/static/style.css">
+<style>.email-body { white-space: pre-wrap; background: #f8f9fa; padding: 16px; border-radius: 8px; font-size: 0.9rem; line-height: 1.6; }
+.email-body a { color: #533483; word-break: break-all; }</style>
+</head>
+<body>
+<div class="nav"><span class="brand">Mailbox</span><a href="/">Inbox</a></div>
+<div class="container">
+  <div class="card">
+    <p class="mb-8"><strong>To:</strong> {{ email.recipient }}</p>
+    <p class="mb-8"><strong>Subject:</strong> {{ email.subject }}</p>
+    <p class="mb-8"><strong>Date:</strong> {{ email.received_at }}</p>
+    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+    <div class="email-body">{{ email.body | urlize | safe }}</div>
+  </div>
+  <p><a href="/">Back to Inbox</a></p>
+</div>
+</body>
+</html>

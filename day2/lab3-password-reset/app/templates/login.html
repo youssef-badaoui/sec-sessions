@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Account Portal - Login</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Account Portal</span></div>
+<div class="container">
+  <div class="card text-center">
+    <h1>Sign In</h1>
+    <p>Access your account</p>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    {% if success %}<div class="flash flash-success">{{ success }}</div>{% endif %}
+    <form method="POST">
+      <label>Username</label>
+      <input type="text" name="username" required>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <button type="submit">Sign In</button>
+    </form>
+    <p class="mt-16"><a href="/forgot-password">Forgot Password?</a></p>
+  </div>
+</div>
+</body>
+</html>

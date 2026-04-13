@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mailbox</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Mailbox</span></div>
+<div class="container">
+  <div class="card">
+    <h2>Inbox</h2>
+    {% if emails %}
+    <table class="table">
+      <tr><th>To</th><th>Subject</th><th>Date</th><th></th></tr>
+      {% for e in emails %}
+      <tr>
+        <td>{{ e.recipient }}</td>
+        <td>{{ e.subject }}</td>
+        <td>{{ e.received_at }}</td>
+        <td><a href="/email/{{ e.id }}" class="btn btn-small">Read</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>No emails yet.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

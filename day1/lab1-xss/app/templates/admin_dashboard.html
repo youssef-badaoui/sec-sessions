@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>Admin Dashboard</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav">
+  <span class="brand">Feedback Board</span>
+  <a href="/board">Board</a>
+  <a href="/admin/dashboard">Dashboard</a>
+  <a href="/logout">Logout</a>
+</div>
+<div class="container">
+  <div class="card">
+    <h1>Welcome, {{ user.username }}!</h1>
+    <p><span class="badge badge-admin">Admin</span></p>
+    <h2 class="mt-16">System Statistics</h2>
+    <table class="table">
+      <tr><td>Active Users</td><td>47</td></tr>
+      <tr><td>Total Feedback</td><td>312</td></tr>
+      <tr><td>Pending Reviews</td><td>8</td></tr>
+      <tr><td>System Status</td><td style="color:green;">Healthy</td></tr>
+    </table>
+    <h2 class="mt-16">Confidential Notes</h2>
+    <p>Q2 restructuring plan: Engineering team merge scheduled for May. Do not share externally.</p>
+  </div>
+</div>
+</body>
+</html>

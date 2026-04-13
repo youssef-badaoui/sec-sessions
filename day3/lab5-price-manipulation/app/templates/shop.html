@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><title>TechShop</title><link rel="stylesheet" href="/static/style.css">
+<style>.product-emoji { font-size: 3rem; margin-bottom: 8px; }</style>
+</head>
+<body>
+<div class="nav">
+  <span class="brand">TechShop</span>
+  <a href="/">Products</a>
+  <a href="/admin/orders">Orders</a>
+</div>
+<div class="container" style="max-width:800px;">
+  <div class="card">
+    <h1>Our Products</h1>
+    <p>Browse our latest tech products</p>
+  </div>
+  <div class="product-grid">
+    {% for p in products %}
+    <div class="product-card">
+      <div class="product-emoji">{{ p.image_emoji }}</div>
+      <h3>{{ p.name }}</h3>
+      <p style="font-size:0.85rem;color:#666;">{{ p.description }}</p>
+      <div class="price">${{ "%.2f" | format(p.price) }}</div>
+      <form method="POST" action="/buy">
+        <input type="hidden" name="product_id" value="{{ p.id }}">
+        <input type="hidden" name="price" value="{{ p.price }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-small">Buy Now</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+</body>
+</html>

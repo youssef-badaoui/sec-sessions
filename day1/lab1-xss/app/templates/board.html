@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Feedback Board</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav">
+  <span class="brand">Feedback Board</span>
+  <a href="/board">Board</a>
+  <a href="/logout">Logout ({{ user.username }})</a>
+</div>
+<div class="container">
+  <div class="card">
+    <h2>Post a Comment</h2>
+    <form method="POST">
+      <textarea name="content" placeholder="Write your feedback..." required></textarea>
+      <button type="submit">Post Comment</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Comments</h2>
+    {% if comments %}
+      {% for c in comments %}
+        <div class="comment">
+          <div class="meta">{{ c.username }} &mdash; {{ c.created_at }}</div>
+          <div>{{ c.content | safe }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No comments yet. Be the first!</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Link Preview - Result</title><link rel="stylesheet" href="/static/style.css">
+<style>.preview-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 16px; max-height: 500px; overflow: auto; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; font-family: monospace; }</style>
+</head>
+<body>
+<div class="nav"><span class="brand">Link Preview Tool</span><a href="/">New Preview</a></div>
+<div class="container" style="max-width:800px;">
+  <div class="card">
+    <h2>Preview Result</h2>
+    <table class="table">
+      <tr><td><strong>URL</strong></td><td style="word-break:break-all;">{{ url }}</td></tr>
+      <tr><td><strong>Status</strong></td><td>{{ status_code }}</td></tr>
+      <tr><td><strong>Content-Type</strong></td><td>{{ content_type }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Response Body</h2>
+    <div class="preview-box">{{ content }}</div>
+  </div>
+  <p><a href="/" class="btn">Fetch Another URL</a></p>
+</div>
+</body>
+</html>

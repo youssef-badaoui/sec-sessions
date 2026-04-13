@@ -1,0 +1,15 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "5006:5006"
+    depends_on:
+      - internal-api
+
+  internal-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.internal
+    # No ports mapped to host — only accessible from within the Docker network

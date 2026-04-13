@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Secure Portal - Dashboard</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav">
+  <span class="brand">Secure Portal</span>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/logout">Logout</a>
+</div>
+<div class="container">
+  <div class="card">
+    <h1>Welcome, {{ username }}!</h1>
+    <p><span class="badge {% if role == 'admin' %}badge-admin{% else %}badge-user{% endif %}">{{ role }}</span></p>
+    {% if role == 'admin' %}
+    <h2 class="mt-16">Admin Controls</h2>
+    <table class="table">
+      <tr><td>Server Status</td><td style="color:green;">All Systems Operational</td></tr>
+      <tr><td>Security Level</td><td>High</td></tr>
+      <tr><td>API Keys Active</td><td>12</td></tr>
+      <tr><td>Pending Approvals</td><td>3</td></tr>
+    </table>
+    {% else %}
+    <h2 class="mt-16">Your Account</h2>
+    <p>You are authenticated with two-factor authentication.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Secure Portal - 2FA</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Secure Portal</span></div>
+<div class="container">
+  <div class="card text-center">
+    <h1>Two-Factor Authentication</h1>
+    <p>A 6-digit code has been sent to your mailbox. Enter it below.</p>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    <form method="POST" action="/login2">
+      <input type="hidden" name="username" value="{{ username }}">
+      <input type="hidden" name="password" value="{{ password }}">
+      <label>2FA Code</label>
+      <input type="text" name="2fa_code" maxlength="6" pattern="[0-9]{6}" required placeholder="000000">
+      <button type="submit">Verify</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

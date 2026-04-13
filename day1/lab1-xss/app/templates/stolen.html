@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Stolen Tokens</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Feedback Board</span><a href="/board">Board</a></div>
+<div class="container">
+  <div class="card">
+    <h2>Captured Tokens</h2>
+    <p>Tokens received via the /steal endpoint:</p>
+    {% if tokens %}
+    <table class="table">
+      <tr><th>#</th><th>Token</th><th>Received At</th></tr>
+      {% for t in tokens %}
+      <tr><td>{{ t.id }}</td><td style="word-break:break-all;font-family:monospace;font-size:0.85rem;">{{ t.token }}</td><td>{{ t.received_at }}</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>No tokens captured yet.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

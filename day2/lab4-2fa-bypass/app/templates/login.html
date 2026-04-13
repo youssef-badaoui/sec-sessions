@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Secure Portal - Login</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav"><span class="brand">Secure Portal</span></div>
+<div class="container">
+  <div class="card text-center">
+    <h1>Secure Portal</h1>
+    <p>Two-factor authentication enabled</p>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    <form method="POST">
+      <label>Username</label>
+      <input type="text" name="username" required>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <button type="submit">Sign In</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

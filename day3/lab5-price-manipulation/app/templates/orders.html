@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Admin - Orders</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav">
+  <span class="brand">TechShop</span>
+  <a href="/">Products</a>
+  <a href="/admin/orders">Orders</a>
+</div>
+<div class="container" style="max-width:800px;">
+  <div class="card">
+    <h2>All Orders <span class="badge badge-admin">Admin</span></h2>
+    {% if orders %}
+    <table class="table">
+      <tr><th>Order #</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Date</th></tr>
+      {% for o in orders %}
+      <tr>
+        <td>{{ o.id }}</td>
+        <td>{{ o.product_name }}</td>
+        <td>{{ o.quantity }}</td>
+        <td>${{ "%.2f" | format(o.unit_price) }}</td>
+        <td>${{ "%.2f" | format(o.total) }}</td>
+        <td>{{ o.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p>No orders yet.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
