@@ -18,6 +18,9 @@ if curl -s -o /dev/null -w "%{http_code}" http://localhost:5002/login | grep -q 
     echo "Credentials:"
     echo "  admin    / supersecretpassword"
     echo "  employee / password123"
+    echo ""
+    echo "Walkthrough:"
+    echo "  walkthrough.html"
 else
     echo "ERROR: App failed to start. Check logs with: docker compose logs"
 fi

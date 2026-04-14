@@ -61,9 +61,9 @@ def login():
         query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
         try:
             user = conn.execute(query).fetchone()
-        except Exception:
+        except Exception as exc:
             conn.close()
-            return render_template('login.html', error='Invalid credentials')
+            return render_template('login.html', error=f"SQL error: {exc}", query=query)
 
         if user:
             session['username'] = user['username']
@@ -71,7 +71,7 @@ def login():
             conn.close()
             return redirect(url_for('dashboard'))
         conn.close()
-        return render_template('login.html', error='Invalid credentials')
+        return render_template('login.html', error='Invalid credentials', query=query)
     return render_template('login.html')
 
 @app.route('/dashboard')

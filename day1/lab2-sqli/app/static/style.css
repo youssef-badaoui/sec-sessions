@@ -42,3 +42,12 @@ a { color: #533483; }
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 .badge-admin { background: #fdecea; color: #b71c1c; }
 .badge-user { background: #e3f2fd; color: #1565c0; }
+.sql-debug { text-align: left; background: #0f172a; color: #e2e8f0; margin-bottom: 20px; }
+.sql-debug .sql-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fbbf24; margin-bottom: 10px; }
+.sql-debug pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 0.9rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #e2e8f0;
+}

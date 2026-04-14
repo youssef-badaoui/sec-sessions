@@ -1,7 +1,8 @@
-from flask import Flask, request, redirect, url_for, render_template, make_response, jsonify
+from flask import Flask, request, redirect, url_for, render_template, make_response
 import sqlite3
 import os
 import uuid
+import re
 from datetime import datetime
 
 app = Flask(__name__)
@@ -33,11 +34,6 @@ def init_db():
             username TEXT,
             role TEXT
         );
-        CREATE TABLE IF NOT EXISTS stolen_tokens (
-            id INTEGER PRIMARY KEY,
-            token TEXT,
-            received_at TEXT
-        );
     ''')
     # Seed users
     try:
@@ -58,6 +54,9 @@ def get_current_user(req):
     if session:
         return {'username': session['username'], 'role': session['role']}
     return None
+
+def weak_tag_filter(content):
+    return re.sub(r'<(script|img|svg|iframe|body|video|details)', '', content, flags=re.IGNORECASE)
 
 @app.route('/')
 def index():
@@ -104,31 +103,13 @@ def board():
         return redirect(url_for('login'))
     conn = get_db()
     if request.method == 'POST':
-        content = request.form['content']
+        content = weak_tag_filter(request.form['content'])
         conn.execute("INSERT INTO comments (username, content, created_at) VALUES (?, ?, ?)",
                      (user['username'], content, datetime.now().strftime('%Y-%m-%d %H:%M')))
         conn.commit()
     comments = conn.execute("SELECT * FROM comments ORDER BY id DESC").fetchall()
     conn.close()
     return render_template('board.html', user=user, comments=comments)
-
-@app.route('/steal')
-def steal():
-    token = request.args.get('token', '')
-    if token:
-        conn = get_db()
-        conn.execute("INSERT INTO stolen_tokens (token, received_at) VALUES (?, ?)",
-                     (token, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-        conn.commit()
-        conn.close()
-    return 'OK', 200
-
-@app.route('/stolen')
-def stolen():
-    conn = get_db()
-    tokens = conn.execute("SELECT * FROM stolen_tokens ORDER BY id DESC").fetchall()
-    conn.close()
-    return render_template('stolen.html', tokens=tokens)
 
 @app.route('/admin/dashboard')
 def admin_dashboard():

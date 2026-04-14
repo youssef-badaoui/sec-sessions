@@ -8,6 +8,12 @@
     <h1>Employee Portal</h1>
     <p>Sign in to access the company dashboard</p>
     {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    {% if query %}
+    <div class="card sql-debug">
+      <div class="sql-label">Executed Query</div>
+      <pre>{{ query }}</pre>
+    </div>
+    {% endif %}
     <form method="POST">
       <label>Username</label>
       <input type="text" name="username" required>

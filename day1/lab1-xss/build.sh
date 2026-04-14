@@ -21,8 +21,8 @@ if curl -s -o /dev/null -w "%{http_code}" http://localhost:5001/login | grep -q 
     echo ""
     echo "Useful URLs:"
     echo "  http://localhost:5001/board     — Comment board"
-    echo "  http://localhost:5001/stolen    — Stolen tokens log"
     echo "  http://localhost:5001/admin/dashboard — Admin-only page"
+    echo "  walkthrough.html                — Standalone lab walkthrough"
 else
     echo "ERROR: App failed to start. Check logs with: docker compose logs"
 fi
