@@ -207,8 +207,31 @@
         <p>When the admin visits the board, the browser renders that stored comment as an image element, the image load fails, and <code class="inline">onerror</code> sends the cookie to your webhook listener.</p>
 
         <h3>Fix</h3>
-        <p>Remove <code class="inline">|safe</code> so Jinja escapes user content by default. If the app really needs limited HTML, use allowlist sanitization instead of regex stripping.</p>
-        <pre><span class="tag">&lt;div&gt;</span>{{ c.content }}<span class="tag">&lt;/div&gt;</span></pre>
+        <p>The direct fix is to stop trusting user HTML. In this lab, you can fix it in Python before storage, or in the template when rendering.</p>
+
+        <h3>Fix in Python</h3>
+        <p>Filter the submitted content on the server before saving it. A simple example is to remove special characters that are used to build HTML tags.</p>
+        <pre><span class="kw">import</span> <span class="fn">re</span>
+
+<span class="kw">def</span> <span class="fn">safe_filter</span>(<span class="var">value</span>):
+    <span class="kw">return</span> re.sub(<span class="str">r'[&lt;&gt;"'"'"'()]'</span>, <span class="str">''</span>, value)
+
+<span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+    <span class="var">content</span> = safe_filter(request.form[<span class="str">'content'</span>])
+    conn.execute(
+        <span class="str">"INSERT INTO comments (username, content, created_at) VALUES (?, ?, ?)"</span>,
+        (user[<span class="str">'username'</span>], content, datetime.now().strftime(<span class="str">'%Y-%m-%d %H:%M'</span>))
+    )</pre>
+
+        <h3>Fix in Jinja / HTML rendering</h3>
+        <p>Do not render user content with <code class="inline">|safe</code>. Let Jinja escape it by default.</p>
+        <pre><span class="comment">&lt;!-- vulnerable --&gt;</span>
+<span class="tag">&lt;div&gt;</span>{{ c.content | safe }}<span class="tag">&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- fixed --&gt;</span>
+<span class="tag">&lt;div&gt;</span>{{ c.content }}<span class="tag">&lt;/div&gt;</span></pre>
+
+        <p>Using both together is better: the Python filter reduces dangerous input before storage, and removing <code class="inline">|safe</code> stops the browser from treating comments as trusted HTML.</p>
       </section>
     </article>
   </main>

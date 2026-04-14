@@ -159,10 +159,27 @@ password=' OR 1=1 --</pre>
         <p>The injected <code class="inline">OR 1=1</code> makes the condition true, and the trailing quote is neutralized by the SQL comment. The application then logs you in with the first row returned by the database.</p>
 
         <h3>Fix</h3>
-        <p>Replace string concatenation with a parameterized query so the username and password are always treated as data.</p>
+        <p>The fix should focus on two things: validating the input before building the query, and using prepared statements so the database treats the values as data.</p>
+
+        <h3>1. Input sanitization</h3>
+        <p>Input validation does not replace prepared statements, but it helps reject clearly invalid values before they reach the database.</p>
+        <pre><span class="kw">import</span> <span class="fn">re</span>
+
+<span class="kw">def</span> <span class="fn">is_valid_username</span>(<span class="var">value</span>):
+    <span class="kw">return</span> re.fullmatch(<span class="str">r'[A-Za-z0-9_]+'</span>, value) <span class="kw">is not None</span>
+
+<span class="kw">if</span> <span class="kw">not</span> is_valid_username(username):
+    <span class="kw">return</span> render_template(<span class="str">'login.html'</span>, <span class="var">error</span>=<span class="str">'Invalid username format'</span>)</pre>
+
+        <p>For a login form, this is useful for fields like usernames that should follow a known format.</p>
+
+        <h3>2. Use prepared statements</h3>
+        <p>This is the real fix. The query keeps placeholders, and the values are passed separately.</p>
 
         <pre><span class="var">query</span> = <span class="str">"SELECT * FROM users WHERE username=? AND password=?"</span>
 <span class="var">user</span> = conn.execute(query, (username, password)).fetchone()</pre>
+
+        <p>With this version, a payload like <code class="inline">' OR 1=1 --</code> is handled as a plain string value, not as SQL code.</p>
       </section>
     </article>
   </main>
