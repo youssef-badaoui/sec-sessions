@@ -79,8 +79,6 @@ def login2():
     code = request.form['2fa_code']
 
     conn = get_db()
-    # VULNERABLE: Checks code validity and credentials independently
-    # Does NOT verify the code was issued for this specific user
     code_valid = conn.execute("SELECT * FROM tfa_codes WHERE code=? AND expired=0", (code,)).fetchone()
     user_valid = conn.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password)).fetchone()
 

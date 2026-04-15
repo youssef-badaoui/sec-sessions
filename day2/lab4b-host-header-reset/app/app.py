@@ -5,7 +5,7 @@ import uuid
 import requests as http_requests
 
 app = Flask(__name__)
-app.secret_key = 'lab3-secret-key'
+app.secret_key = 'lab4b-secret-key'
 DB_PATH = '/data/app.db'
 MAILBOX_URL = 'http://mailbox:5013'
 
@@ -83,7 +83,7 @@ def forgot_password():
             token = str(uuid.uuid4())
             conn.execute("INSERT INTO reset_tokens (token, username) VALUES (?, ?)", (token, username))
             conn.commit()
-            reset_link = f"http://localhost:5003/reset-password?token={token}&username={username}"
+            reset_link = f"http://{request.host}{url_for('reset_password')}?token={token}"
             try:
                 http_requests.post(f"{MAILBOX_URL}/api/send", json={
                     'to': user['email'],
@@ -100,23 +100,22 @@ def forgot_password():
 def reset_password():
     if request.method == 'GET':
         token = request.args.get('token', '')
-        username = request.args.get('username', '')
-        return render_template('reset_password.html', token=token, username=username)
+        return render_template('reset_password.html', token=token)
 
     token = request.form['token']
-    username = request.form['username']
     new_password = request.form['new_password']
 
     conn = get_db()
+    # Clean logic: the token identifies the account to reset
     reset = conn.execute("SELECT * FROM reset_tokens WHERE token=? AND expired=0", (token,)).fetchone()
     if reset:
-        conn.execute("UPDATE users SET password=? WHERE username=?", (new_password, username))
+        conn.execute("UPDATE users SET password=? WHERE username=?", (new_password, reset['username']))
         conn.execute("UPDATE reset_tokens SET expired=1 WHERE token=?", (token,))
         conn.commit()
         conn.close()
         return render_template('reset_password.html', success=True)
     conn.close()
-    return render_template('reset_password.html', error='Invalid or expired token', token=token, username=username)
+    return render_template('reset_password.html', error='Invalid or expired token', token=token)
 
 if __name__ == '__main__':
     init_db()

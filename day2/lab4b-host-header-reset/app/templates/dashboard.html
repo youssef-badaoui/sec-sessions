@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Account Portal - Dashboard</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="nav">
+  <span class="brand">Account Portal</span>
+  <a href="/dashboard">Dashboard</a>
+  <a href="/logout">Logout</a>
+</div>
+<div class="container">
+  <div class="card">
+    <h1>Welcome, {{ username }}!</h1>
+    <p><span class="badge {% if role == 'admin' %}badge-admin{% else %}badge-user{% endif %}">{{ role }}</span></p>
+    {% if role == 'admin' %}
+    <h2 class="mt-16">Admin Panel</h2>
+    <p>You have full administrative access to the system.</p>
+    <table class="table">
+      <tr><td>Total Users</td><td>2</td></tr>
+      <tr><td>System Status</td><td style="color:green;">Online</td></tr>
+      <tr><td>Last Backup</td><td>2024-01-15 03:00 UTC</td></tr>
+    </table>
+    {% else %}
+    <h2 class="mt-16">Your Account</h2>
+    <p>You are signed in as a regular user.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
