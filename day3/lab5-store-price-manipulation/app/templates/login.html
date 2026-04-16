@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TechStore - Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <span class="brand">TechStore</span>
+</div>
+<div class="container">
+    <div class="card">
+        <h1>Login</h1>
+        <p>Sign in to your account</p>
+        {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+        <form method="post">
+            <label>Username</label>
+            <input type="text" name="username" required>
+            <label>Password</label>
+            <input type="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p class="mt-16">Don't have an account? <a href="/signup">Create one</a></p>
+    </div>
+</div>
+</body>
+</html>

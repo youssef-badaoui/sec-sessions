@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5008:5008"
+    depends_on:
+      - files
+
+  files:
+    image: python:3.11-slim
+    command: ["python", "-m", "http.server", "7777", "--directory", "/srv/files"]
+    expose:
+      - "7777"
+    volumes:
+      - ./files:/srv/files:ro

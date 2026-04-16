@@ -1,0 +1,7 @@
+{
+  "backup_schedule": "daily 02:00 UTC",
+  "retention_days": 30,
+  "s3_bucket": "company-internal-backups",
+  "databases": ["production_app", "analytics", "auth_service"],
+  "notify_on_failure": "ops-alerts@company.com"
+}

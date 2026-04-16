@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TechStore - Order Confirmed</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <span class="brand">TechStore</span>
+    <div class="links">
+        <a href="/orders">My Orders</a>
+        <a href="/logout">Logout ({{ user.username }})</a>
+    </div>
+</div>
+<div class="container">
+    <div class="card text-center">
+        <h1>Order Confirmed!</h1>
+        <p style="font-size:3rem; margin: 16px 0;">&#10003;</p>
+        <p>You purchased <strong>{{ product }}</strong> for <strong>${{ paid }}</strong>.</p>
+        <p>Remaining balance: <span class="balance">${{ "%.2f"|format(user.balance) }}</span></p>
+        <div class="mt-16">
+            <a href="/shop" class="btn">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

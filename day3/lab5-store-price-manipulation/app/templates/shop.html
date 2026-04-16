@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TechStore - Shop</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <span class="brand">TechStore</span>
+    <div class="links">
+        <a href="/orders">My Orders</a>
+        <a href="/logout">Logout ({{ user.username }})</a>
+    </div>
+</div>
+<div class="container">
+    <div class="card">
+        <h1>Welcome, {{ user.username }}</h1>
+        <p>Your balance: <span class="balance">${{ "%.2f"|format(user.balance) }}</span></p>
+    </div>
+
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+
+    <h2>Products</h2>
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <div class="emoji">{{ product.emoji }}</div>
+            <div class="name">{{ product.name }}</div>
+            <div class="price">${{ "%.2f"|format(product.price) }}</div>
+            <form method="post" action="/buy">
+                <input type="hidden" name="product_name" value="{{ product.name }}">
+                <input type="hidden" name="price" value="{{ product.price }}">
+                <button type="submit" class="btn-small">Buy Now</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 6 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; padding: 32px 16px 48px; }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 32px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre { margin: 14px 0 18px; padding: 16px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--line); border-radius: 8px; font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code.inline { font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #1b2330; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+    .callout { padding: 16px 18px; border-left: 4px solid var(--accent); background: #0f141b; margin: 14px 0 18px; color: var(--muted); }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); } .tag { color: var(--tag); } .attr { color: var(--attr); } .var { color: var(--var); } .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) { body { padding: 20px 12px 40px; } .article { padding: 24px 20px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Day 3 / Lab 6</div>
+      <h1>Race Condition in a Bank Transfer</h1>
+      <p class="lead">MiniBank reads the sender's balance, does some extra work, then applies the update. Two requests sent at nearly the same time both read the same balance, both pass the check, and both subtract — leaving the sender with a negative balance.</p>
+
+      <section>
+        <h2>Quick TOCTOU reminder</h2>
+        <p><strong>TOCTOU</strong> stands for <em>time-of-check / time-of-use</em>. A race condition shows up whenever a check and the action based on that check are separated in time and another thread can change state between them. On the web this usually means two HTTP requests racing to read-then-write the same row.</p>
+      </section>
+
+      <section>
+        <h2>Where the vulnerability comes from</h2>
+        <p>The transfer endpoint does the balance check and the debit as two separate operations, with extra queries in between.</p>
+        <pre><span class="comment"># 1. READ the balance (time of check)</span>
+<span class="var">sender</span> = conn.execute(
+    <span class="str">"SELECT * FROM users WHERE username = ?"</span>, (user[<span class="str">'username'</span>],)
+).fetchone()
+<span class="var">recipient</span> = conn.execute(
+    <span class="str">"SELECT * FROM users WHERE account_id = ?"</span>, (target_account_id,)
+).fetchone()
+
+<span class="comment"># 2. CHECK against the value we just read</span>
+<span class="kw">if</span> sender[<span class="str">'balance'</span>] &lt; amount:
+    <span class="kw">return</span> redirect(...)
+
+<span class="comment"># 3. extra work — widens the race window</span>
+conn.execute(<span class="str">"INSERT INTO audit_log ..."</span>)
+
+<span class="comment"># 4. USE (time of use)</span>
+conn.execute(<span class="str">"UPDATE users SET balance = balance - ? WHERE username = ?"</span>, (amount, sender[<span class="str">'username'</span>]))
+conn.execute(<span class="str">"UPDATE users SET balance = balance + ? WHERE username = ?"</span>, (amount, recipient[<span class="str">'username'</span>]))</pre>
+
+        <p>The check in step 2 uses <code class="inline">sender['balance']</code> — a Python variable read in step 1, not a live row lookup. SQLite is in WAL mode so concurrent connections can hold their own read snapshots at the same time. Two requests enter this code path, both read <code class="inline">balance = 100</code>, both pass the check, and both run the <code class="inline">UPDATE balance = balance - 100</code>. The update always decrements the current row, so the second one pushes the balance to <code class="inline">-100</code>.</p>
+
+        <div class="callout">
+          <p>Fun detail: changing <code class="inline">UPDATE balance = balance - ?</code> into <code class="inline">UPDATE balance = ? WHERE ...</code> with a pre-computed value makes this even worse — both threads would write the same <code class="inline">0</code> and the recipient's balance wouldn't even reflect both transfers correctly.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>How the exploit works</h2>
+        <p>Create two accounts (<code class="inline">alice</code> and <code class="inline">bob</code>) and log in as Alice. Copy Bob's 20-digit account id. Take your session cookie from the browser and fire a handful of transfers in parallel.</p>
+
+        <h3>Parallel curls</h3>
+        <pre><span class="kw">for</span> i <span class="kw">in</span> $(seq <span class="str">1</span> <span class="str">5</span>); <span class="kw">do</span>
+  curl -s -X POST http://localhost:5006/transfer \
+    -H <span class="str">"Cookie: session=&lt;alice-session&gt;"</span> \
+    -d <span class="str">"target_account_id=&lt;bob-account-id&gt;&amp;amount=100"</span> &gt; /dev/null &amp;
+<span class="kw">done</span>
+<span class="fn">wait</span></pre>
+
+        <p>Refresh the dashboard. You'll see multiple <code class="inline">alice → bob</code> transfers of <code class="inline">$100</code> in the history, Alice's balance negative, and Bob's balance above <code class="inline">$200</code>. Alice only ever had $100.</p>
+
+        <h3>Burp Intruder / Repeater</h3>
+        <p>In Burp, capture the transfer request, send it to Repeater and create a tab group. Right-click and choose <strong>Send group in parallel (single-packet attack)</strong>. That aligns the requests within a single TCP packet, which maximizes the chance they all pass the balance check before any of them writes.</p>
+
+        <p>Keep the burst around 5–10 requests. Flask's dev server is single-process, so huge bursts just turn into <code class="inline">database is locked</code> responses without helping.</p>
+      </section>
+
+      <section>
+        <h2>Fix</h2>
+        <p>The check and the write must be a single atomic statement, and the application must only commit the rest of the transfer if that statement actually updated a row.</p>
+
+        <pre><span class="comment"># Debit only if the balance can cover the amount</span>
+<span class="var">cursor</span> = conn.execute(
+    <span class="str">"UPDATE users SET balance = balance - ? "</span>
+    <span class="str">"WHERE username = ? AND balance &gt;= ?"</span>,
+    (amount, sender_username, amount),
+)
+<span class="kw">if</span> cursor.rowcount == <span class="str">0</span>:
+    <span class="kw">return</span> redirect(url_for(<span class="str">'dashboard'</span>, <span class="var">message</span>=<span class="str">'Insufficient balance'</span>))
+
+conn.execute(<span class="str">"UPDATE users SET balance = balance + ? WHERE username = ?"</span>, (amount, recipient_username))
+conn.execute(<span class="str">"INSERT INTO transfers ..."</span>)
+conn.commit()</pre>
+
+        <p>The <code class="inline">WHERE balance &gt;= ?</code> moves the check into the database, so two concurrent UPDATEs cannot both succeed on the same starting balance. On a full-featured database you can also use <code class="inline">SELECT ... FOR UPDATE</code> inside an explicit transaction to lock the sender's row for the duration of the transfer.</p>
+
+        <div class="callout">
+          <p>Race conditions do not only apply to money. The same pattern breaks coupon redemption, invite-only signups, one-time 2FA bypasses, and "buy with points" flows. Anywhere you see "check X, then do Y", ask whether X could change between read and write.</p>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

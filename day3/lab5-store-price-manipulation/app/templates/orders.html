@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TechStore - My Orders</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <span class="brand">TechStore</span>
+    <div class="links">
+        <a href="/shop">Shop</a>
+        <a href="/logout">Logout ({{ user.username }})</a>
+    </div>
+</div>
+<div class="container">
+    <div class="card">
+        <h1>My Orders</h1>
+        <p>Your balance: <span class="balance">${{ "%.2f"|format(user.balance) }}</span></p>
+    </div>
+    <div class="card">
+        {% if orders %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Price Paid</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.product_name }}</td>
+                    <td>${{ "%.2f"|format(order.price_paid) }}</td>
+                    <td>{{ order.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No orders yet. <a href="/shop">Start shopping!</a></p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

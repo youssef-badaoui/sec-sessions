@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MiniBank — Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <a class="brand" href="/dashboard">
+        <span class="logo">MB</span>
+        <span>MiniBank</span>
+    </a>
+    <div class="links">
+        <span class="who">Signed in as <strong>{{ user.username }}</strong></span>
+        <a class="logout-link" href="/logout">Log out</a>
+    </div>
+</div>
+
+<div class="container">
+    {% if message %}<div class="flash flash-info">{{ message }}</div>{% endif %}
+
+    <div class="card balance-hero">
+        <div class="balance-label">Available balance</div>
+        <div class="balance-amount">${{ "%.2f"|format(user.balance) }}</div>
+        <div class="balance-meta">Account ID <span class="account-id">{{ user.account_id }}</span></div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Send money</h2>
+            <form method="post" action="/transfer">
+                <label>Recipient account ID</label>
+                <input type="text" name="target_account_id" placeholder="20-digit account ID" required>
+                <label>Amount ($)</label>
+                <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+                <button type="submit" class="btn-block">Send transfer</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>All accounts</h2>
+            {% if accounts %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Account</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in accounts %}
+                    <tr>
+                        <td>{{ account.username }}</td>
+                        <td><span class="account-id">{{ account.account_id }}</span></td>
+                        <td class="{{ 'balance-neg' if account.balance < 0 else '' }}">${{ "%.2f"|format(account.balance) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty">No accounts yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Transfer history</h2>
+        {% if transfers %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transfers %}
+                <tr>
+                    <td>{{ tx.sender }}</td>
+                    <td>{{ tx.recipient }}</td>
+                    <td class="{{ 'amount-neg' if tx.sender == user.username else 'amount-pos' }}">
+                        {{ '-' if tx.sender == user.username else '+' }}${{ "%.2f"|format(tx.amount) }}
+                    </td>
+                    <td>{{ tx.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No transfers yet. Send your first payment to get started.</div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

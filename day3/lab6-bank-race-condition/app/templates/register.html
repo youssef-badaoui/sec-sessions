@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MiniBank — Create account</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="logo">MB</span>
+            <span>MiniBank</span>
+        </div>
+        <h1 class="auth-title">Open your account</h1>
+        <p class="auth-subtitle">New accounts start with <strong style="color:var(--accent);">$100</strong> and a unique 20-digit account ID.</p>
+
+        {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+
+        <form method="post" action="/register">
+            <label>Username</label>
+            <input type="text" name="username" autocomplete="username" required>
+            <label>Password</label>
+            <input type="password" name="password" autocomplete="new-password" required>
+            <button type="submit" class="btn-block">Create account</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="/login">Sign in</a>
+        </p>
+    </div>
+</div>
+</body>
+</html>

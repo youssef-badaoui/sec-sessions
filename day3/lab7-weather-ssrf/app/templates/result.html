@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WeatherCheck — {{ city }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <a class="brand" href="/">
+        <span class="logo">☀️</span>
+        <span>WeatherCheck</span>
+    </a>
+    <a class="nav-link" href="/">← Check another city</a>
+</div>
+
+<div class="container">
+    {% if weather %}
+    <div class="weather-hero">
+        <div class="weather-hero-top">
+            <div>
+                <div class="weather-location">{{ weather.area }}</div>
+                <div class="weather-region">{{ weather.region }}, {{ weather.country }}</div>
+            </div>
+            <div class="weather-observed">Updated {{ weather.observed_at }}</div>
+        </div>
+        <div class="weather-hero-main">
+            <div class="weather-icon">{{ weather.icon }}</div>
+            <div>
+                <div class="weather-temp">{{ weather.temp_c }}<span class="deg">°C</span></div>
+                <div class="weather-desc">{{ weather.desc }}</div>
+                <div class="weather-feels">Feels like {{ weather.feels_c }}°C · {{ weather.temp_f }}°F</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat">
+            <div class="stat-label">Humidity</div>
+            <div class="stat-value">{{ weather.humidity }}<span class="unit">%</span></div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Wind</div>
+            <div class="stat-value">{{ weather.wind_kmph }}<span class="unit">km/h</span></div>
+            <div class="stat-sub">{{ weather.wind_dir }}</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">UV Index</div>
+            <div class="stat-value">{{ weather.uv_index }}</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Visibility</div>
+            <div class="stat-value">{{ weather.visibility }}<span class="unit">km</span></div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Pressure</div>
+            <div class="stat-value">{{ weather.pressure }}<span class="unit">mb</span></div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Cloud cover</div>
+            <div class="stat-value">{{ weather.cloudcover }}<span class="unit">%</span></div>
+        </div>
+    </div>
+
+    {% if weather.forecast %}
+    <div class="card">
+        <h2>3-day forecast</h2>
+        <div class="forecast-row">
+            {% for day in weather.forecast %}
+            <div class="forecast-day">
+                <div class="forecast-date">{{ day.date }}</div>
+                <div class="forecast-icon">{{ day.icon }}</div>
+                <div class="forecast-desc">{{ day.desc }}</div>
+                <div class="forecast-temps">
+                    <span class="temp-max">{{ day.max_c }}°</span>
+                    <span class="temp-min">{{ day.min_c }}°</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="card raw-hero">
+        <div class="raw-label">Non-weather response</div>
+        <h1>Received {{ status }} response</h1>
+        <p>The server fetched the URL but the body isn't a valid wttr.in JSON payload.</p>
+    </div>
+    {% endif %}
+
+    <div class="card debug">
+        <h2>Request details</h2>
+        <div class="kv"><span class="k">URL</span><span class="v">{{ api_url }}</span></div>
+        <div class="kv"><span class="k">Status</span><span class="v">{{ status }}</span></div>
+        <div class="kv"><span class="k">Content-Type</span><span class="v">{{ content_type }}</span></div>
+        <h3>Raw response body</h3>
+        <pre class="result">{{ body }}</pre>
+    </div>
+</div>
+</body>
+</html>

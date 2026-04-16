@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5006:5006"
+    volumes:
+      - data:/data
+
+volumes:
+  data:

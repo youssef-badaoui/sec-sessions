@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WeatherCheck</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="nav">
+    <a class="brand" href="/">
+        <span class="logo">☀️</span>
+        <span>WeatherCheck</span>
+    </a>
+    <span class="nav-meta">Live conditions worldwide</span>
+</div>
+
+<div class="container">
+    <div class="hero-intro">
+        <h1>Check the weather, anywhere.</h1>
+        <p>Pick a city below and we'll call our weather API to get the current conditions and a 3-day forecast.</p>
+        <div class="api-pill">API endpoint: <code>{{ api_base }}/&lt;city&gt;?format=j1</code></div>
+    </div>
+
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+
+    <div class="city-grid">
+        {% for city in cities %}
+        <form method="post" action="/check" class="city-card">
+            <input type="hidden" name="city" value="{{ city.name }}">
+            <input type="hidden" name="api_url" value="{{ api_base }}/{{ city.name }}?format=j1">
+            <div class="flag">{{ city.emoji }}</div>
+            <div class="name">{{ city.name }}</div>
+            <div class="country">{{ city.country }}</div>
+            <button type="submit">Get weather →</button>
+        </form>
+        {% endfor %}
+    </div>
+
+    <div class="hint">
+        <strong>Ops note:</strong> our internal file service runs at <code>http://files:7777</code> on the backend network — not reachable from the internet.
+    </div>
+</div>
+</body>
+</html>
