@@ -79,8 +79,18 @@ def login2():
     code = request.form['2fa_code']
 
     conn = get_db()
-    code_valid = conn.execute("SELECT * FROM tfa_codes WHERE code=? AND expired=0", (code,)).fetchone()
+    # Fixed version:
+    # Bind the 2FA code to the submitted username so a code issued for one
+    # account cannot be replayed with another user's credentials.
+    #
+    # code_valid = conn.execute(
+    #     "SELECT * FROM tfa_codes WHERE code=? AND username=? AND expired=0",
+    #     (code, username)
+    # ).fetchone()
+    #
+    # The lab keeps the vulnerable query below on purpose.
     user_valid = conn.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password)).fetchone()
+    code_valid = conn.execute("SELECT * FROM tfa_codes WHERE code=? AND expired=0", (code,)).fetchone()
 
     if code_valid and user_valid:
         conn.execute("UPDATE tfa_codes SET expired=1 WHERE code=?", (code,))

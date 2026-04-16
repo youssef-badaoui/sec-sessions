@@ -1,6 +1,6 @@
 # Security Training Labs
 
-Hands-on security training platform — 3 days, 7 vulnerability labs. Each lab is a standalone Docker containerized web app with an intentional vulnerability.
+Hands-on security training platform — 3 days, 8 vulnerability labs. Each lab is a standalone Docker containerized web app with an intentional vulnerability.
 
 ## Labs
 
@@ -11,8 +11,9 @@ Hands-on security training platform — 3 days, 7 vulnerability labs. Each lab i
 | 2 | Lab 3 | Password Reset Flaw | 5003, 5013 (mailbox) | `day2/lab3-password-reset/` |
 | 2 | Lab 4 | 2FA Bypass | 5004, 5014 (mailbox) | `day2/lab4-2fa-bypass/` |
 | 2 | Lab 4B | Reset Link Host Header Poisoning | 5007, 5017 (mailbox) | `day2/lab4b-host-header-reset/` |
-| 3 | Lab 5 | Price Manipulation | 5005 | `day3/lab5-price-manipulation/` |
-| 3 | Lab 6 | SSRF | 5006 | `day3/lab6-ssrf/` |
+| 3 | Lab 5 | Store Price Manipulation | 5005 | `day3/lab5-store-price-manipulation/` |
+| 3 | Lab 6 | Bank Transfer Race Condition | 5006 | `day3/lab6-bank-race-condition/` |
+| 3 | Lab 7 | Weather SSRF | 5008, 7777 (internal files) | `day3/lab7-weather-ssrf/` |
 
 ## Quick Start
 
@@ -29,8 +30,9 @@ cd day2/lab4-2fa-bypass && docker compose up --build
 cd day2/lab4b-host-header-reset && docker compose up --build
 
 # Day 3
-cd day3/lab5-price-manipulation && docker compose up --build
-cd day3/lab6-ssrf && docker compose up --build
+cd day3/lab5-store-price-manipulation && docker compose up --build
+cd day3/lab6-bank-race-condition && docker compose up --build
+cd day3/lab7-weather-ssrf && docker compose up --build
 ```
 
 ## Tech Stack
@@ -42,8 +44,8 @@ cd day3/lab6-ssrf && docker compose up --build
 
 ## Training Materials
 
-Training material now follows two patterns:
-- Day 1 and Day 2 labs include a short `guide.md` that points to a standalone `walkthrough.html`
+Training material follows one pattern:
+- Each lab includes a short `guide.md` that points to a standalone `walkthrough.html`
 - The standalone walkthroughs cover the code path, exploitation flow, and fix
 - Day 1 Lab 1 also includes a French walkthrough: `walkthrough-fr.html`
 
@@ -54,6 +56,9 @@ Available standalone walkthroughs:
 - `day2/lab3-password-reset/walkthrough.html`
 - `day2/lab4-2fa-bypass/walkthrough.html`
 - `day2/lab4b-host-header-reset/walkthrough.html`
+- `day3/lab5-store-price-manipulation/walkthrough.html`
+- `day3/lab6-bank-race-condition/walkthrough.html`
+- `day3/lab7-weather-ssrf/walkthrough.html`
 
 ## Test Credentials
 
@@ -69,6 +74,9 @@ Available standalone walkthroughs:
 | Lab 4 | `admin` | `adminpass` | admin |
 | Lab 4B | `user` | `password` | user |
 | Lab 4B | `admin` | `unknownpassword` | admin |
+| Lab 5 | new account | chosen at signup | user |
+| Lab 6 | `alice` | `password` | user |
+| Lab 6 | `bob` | `password` | user |
 
 ## Mailbox Accounts
 
