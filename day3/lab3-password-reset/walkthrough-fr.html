@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 3 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; padding: 32px 16px 48px; }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 32px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre { margin: 14px 0 18px; padding: 16px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--line); border-radius: 8px; font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code.inline { font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #1b2330; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+    .callout { padding: 16px 18px; border-left: 4px solid var(--accent); background: #0f141b; margin: 14px 0 18px; color: var(--muted); }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); } .tag { color: var(--tag); } .attr { color: var(--attr); } .var { color: var(--var); } .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) { body { padding: 20px 12px 40px; } .article { padding: 24px 20px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Jour 3 / Lab 3</div>
+      <h1>Reset de mot de passe avec un lien token-utilisateur cassé</h1>
+      <p class="lead">Ce lab ressemble à un flux de reset normal, mais l’étape finale fait confiance au nom d’utilisateur reçu dans le formulaire au lieu de récupérer le compte cible directement à partir du token.</p>
+
+      <section>
+        <h2>Rappel rapide</h2>
+        <p>Un token de reset ne doit fonctionner que pour le compte pour lequel il a été émis. Si le serveur ne valide que le token et pas la relation token-utilisateur, un attaquant peut demander un token pour un compte et l’utiliser pour réinitialiser un autre.</p>
+      </section>
+
+      <section>
+        <h2>D’où vient la vulnérabilité</h2>
+        <p>Le token est stocké avec un nom d’utilisateur, mais la requête de reset ne vérifie que si le token existe et est encore actif.</p>
+        <pre><span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+    <span class="var">token</span> = request.form[<span class="str">'token'</span>]
+    <span class="var">username</span> = request.form[<span class="str">'username'</span>]
+    <span class="var">new_password</span> = request.form[<span class="str">'new_password'</span>]
+
+    <span class="var">reset</span> = conn.execute(
+        <span class="str">"SELECT * FROM reset_tokens WHERE token=? AND expired=0"</span>,
+        (token,)
+    ).fetchone()
+
+    <span class="kw">if</span> reset:
+        conn.execute(
+            <span class="str">"UPDATE users SET password=? WHERE username=?"</span>,
+            (new_password, username)
+        )</pre>
+
+        <pre><span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"text"</span> <span class="attr">name</span>=<span class="str">"username"</span> <span class="attr">value</span>=<span class="str">"{{ username }}"</span><span class="tag">&gt;</span></pre>
+      </section>
+
+      <section>
+        <h2>Comment fonctionne l’exploit</h2>
+        <div class="callout">
+          <p>On demande un reset pour son propre compte, on récupère un token valide depuis sa boîte mail, puis on change le champ <code class="inline">username</code> avant de soumettre le nouveau mot de passe.</p>
+        </div>
+
+        <h3>Demande d’un token de reset</h3>
+        <pre>POST /forgot-password
+username=user</pre>
+
+        <h3>Utilisation du token contre un autre compte</h3>
+        <pre>POST /reset-password
+token=&lt;token-valide-du-user&gt;
+username=admin
+new_password=hacked123</pre>
+
+        <p>Le token est valide, donc l’application l’accepte. La mise à jour s’applique alors à <code class="inline">admin</code> parce que le serveur fait confiance au champ du formulaire.</p>
+
+        <h3>Correctif</h3>
+        <p>Lier la recherche du token au nom d’utilisateur, ou mieux : ne dériver le nom d’utilisateur que depuis le token.</p>
+        <pre><span class="comment"># requête plus sûre</span>
+<span class="var">reset</span> = conn.execute(
+    <span class="str">"SELECT * FROM reset_tokens WHERE token=? AND username=? AND expired=0"</span>,
+    (token, username)
+).fetchone()</pre>
+
+        <pre><span class="comment"># encore mieux : ignorer complètement le username envoyé</span>
+<span class="kw">if</span> reset:
+    conn.execute(
+        <span class="str">"UPDATE users SET password=? WHERE username=?"</span>,
+        (new_password, reset[<span class="str">'username'</span>])
+    )</pre>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

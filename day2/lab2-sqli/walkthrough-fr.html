@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 2 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 32px 16px 48px;
+    }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 32px;
+    }
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre {
+      margin: 14px 0 18px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    code.inline {
+      font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #1b2330;
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .callout {
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: #0f141b;
+      margin: 14px 0 18px;
+      color: var(--muted);
+    }
+    .kw { color: var(--kw); }
+    .fn { color: var(--fn); }
+    .str { color: var(--str); }
+    .tag { color: var(--tag); }
+    .attr { color: var(--attr); }
+    .var { color: var(--var); }
+    .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) {
+      body { padding: 20px 12px 40px; }
+      .article { padding: 24px 20px; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Jour 2 / Lab 2</div>
+      <h1>Injection SQL via le formulaire de connexion</h1>
+      <p class="lead">Ce lab construit la requête de login en concaténant directement le nom d’utilisateur et le mot de passe dans le SQL. L’application affiche aussi la requête finale quand le login échoue, ce qui rend le chemin d’injection très facile à observer.</p>
+
+      <section>
+        <h2>Rappel rapide sur l’injection SQL</h2>
+        <p>Une <strong>injection SQL</strong> apparaît quand l’entrée de l’utilisateur est insérée dans une requête comme du code au lieu d’être traitée comme une donnée. Si la base de données interprète l’entrée de l’attaquant comme une partie de la requête, l’attaquant peut changer la logique.</p>
+        <p>Dans ce lab l’impact est un <strong>contournement d’authentification</strong>. L’objectif est de transformer la clause <code class="inline">WHERE</code> en quelque chose qui s’évalue toujours à vrai.</p>
+      </section>
+
+      <section>
+        <h2>D’où vient la vulnérabilité</h2>
+        <p>La route de login construit la requête SQL avec une f-string. Aucun placeholder, donc la base de données reçoit l’entrée brute de l’utilisateur dans la requête.</p>
+
+        <pre><span class="kw">if</span> request.method == <span class="str">'POST'</span>:
+    <span class="var">username</span> = request.form[<span class="str">'username'</span>]
+    <span class="var">password</span> = request.form[<span class="str">'password'</span>]
+
+    <span class="var">query</span> = <span class="str">f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"</span>
+    <span class="var">user</span> = conn.execute(query).fetchone()</pre>
+
+        <div class="callout">
+          <p>Comme l’application affiche la requête exécutée en cas d’échec de login, on peut voir exactement comment le payload modifie le SQL.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Exploitation et correctif</h2>
+        <p>On utilise un nom d’utilisateur valide comme <code class="inline">admin</code> et on injecte dans le champ mot de passe avec <code class="inline">' OR 1=1 --</code>.</p>
+
+        <h3>Entrée</h3>
+        <pre>username=admin
+password=' OR 1=1 --</pre>
+
+        <h3>Requête construite</h3>
+        <pre><span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> username=<span class="str">'admin'</span> <span class="kw">AND</span> password=<span class="str">''</span> <span class="kw">OR</span> <span class="str">1</span>=<span class="str">1</span> <span class="comment">--'</span></pre>
+
+        <p>Le <code class="inline">OR 1=1</code> injecté rend la condition vraie, et le guillemet final est neutralisé par le commentaire SQL. L’application connecte alors avec la première ligne renvoyée par la base.</p>
+
+        <h3>Correctif</h3>
+        <p>Le correctif s’articule autour de deux points : valider l’entrée avant de construire la requête, et utiliser des requêtes préparées pour que la base traite les valeurs comme des données.</p>
+
+        <h3>1. Validation de l’entrée</h3>
+        <p>La validation ne remplace pas les requêtes préparées, mais elle permet de rejeter les valeurs clairement invalides avant qu’elles n’atteignent la base.</p>
+        <pre><span class="kw">import</span> <span class="fn">re</span>
+
+<span class="kw">def</span> <span class="fn">is_valid_username</span>(<span class="var">value</span>):
+    <span class="kw">return</span> re.fullmatch(<span class="str">r'[A-Za-z0-9_]+'</span>, value) <span class="kw">is not None</span>
+
+<span class="kw">if</span> <span class="kw">not</span> is_valid_username(username):
+    <span class="kw">return</span> render_template(<span class="str">'login.html'</span>, <span class="var">error</span>=<span class="str">'Invalid username format'</span>)</pre>
+
+        <p>Pour un formulaire de login, c’est utile pour des champs comme le nom d’utilisateur qui suivent un format connu.</p>
+
+        <h3>2. Utiliser des requêtes préparées</h3>
+        <p>C’est le vrai correctif. La requête garde des placeholders, et les valeurs sont passées séparément.</p>
+
+        <pre><span class="var">query</span> = <span class="str">"SELECT * FROM users WHERE username=? AND password=?"</span>
+<span class="var">user</span> = conn.execute(query, (username, password)).fetchone()</pre>
+
+        <p>Avec cette version, un payload comme <code class="inline">' OR 1=1 --</code> est traité comme une chaîne de caractères, pas comme du code SQL.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

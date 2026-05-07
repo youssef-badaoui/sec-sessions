@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Security Training Labs</title>
+  <title>Labs de Sécurité — Techso</title>
   <style>
     :root {
       --bg: #0b0f14;
@@ -175,23 +175,23 @@
 <body>
   <aside>
     <div class="brand">
-      <h1>Security Training Labs</h1>
-      <p>Code-level security training for client dev teams.<br>
-         Techso Group · by Youssef Badaoui</p>
+      <h1>Labs de Sécurité</h1>
+      <p>Formation sécurité au niveau du code, pour les équipes de dev clientes.<br>
+         Techso Group · par Youssef Badaoui</p>
     </div>
     <nav id="nav"></nav>
   </aside>
   <main>
     <div class="topbar">
-      <div class="title" id="topTitle">Select a lab</div>
+      <div class="title" id="topTitle">Choisis un lab</div>
       <div class="lang" id="lang"></div>
     </div>
     <div id="contentWrap" class="placeholder">
       <div class="placeholder-inner">
-        <span class="stat">4 days · 10 labs</span>
-        <h2>Welcome.</h2>
-        <p>Each lab is a self-contained Dockerized Flask app with one intentional vulnerability, a reproduction path, and a fix.</p>
-        <p>Pick a lab on the left — its walkthrough opens here. To run a lab locally, follow the README quick-start.</p>
+        <span class="stat">4 jours · 10 labs</span>
+        <h2>Bienvenue.</h2>
+        <p>Chaque lab est une appli Flask containerisée et autonome qui contient une vulnérabilité volontaire, un chemin d’exploitation et un correctif.</p>
+        <p>Choisis un lab à gauche — son walkthrough s’ouvre ici. Pour exécuter un lab en local, suis le quick-start du README.</p>
       </div>
     </div>
   </main>
@@ -199,56 +199,83 @@
   <script>
     const groups = [
       {
-        day: 'Day 1',
+        day: 'Jour 1',
         items: [
-          { id: 'd1l1', name: 'Lab 1 — Broken Access Control',
-            vuln: 'Wallet tampering via an unprotected admin endpoint',
-            walkthroughs: [{ lang: 'EN', src: 'day1/lab1-broken-access-control/walkthrough.html' }] },
-          { id: 'd1l2', name: 'Lab 2 — IDOR Password Update',
-            vuln: 'Account takeover via a trusted body parameter',
-            walkthroughs: [{ lang: 'EN', src: 'day1/lab2-idor-password/walkthrough.html' }] },
+          { id: 'd1l1', name: 'Lab 1 — Contrôle d’accès défaillant',
+            vuln: 'Altération du portefeuille via un endpoint admin non protégé',
+            walkthroughs: [
+              { lang: 'FR', src: 'day1/lab1-broken-access-control/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day1/lab1-broken-access-control/walkthrough.html' },
+            ] },
+          { id: 'd1l2', name: 'Lab 2 — IDOR mise à jour mot de passe',
+            vuln: 'Prise de contrôle de compte via un paramètre de body',
+            walkthroughs: [
+              { lang: 'FR', src: 'day1/lab2-idor-password/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day1/lab2-idor-password/walkthrough.html' },
+            ] },
         ],
       },
       {
-        day: 'Day 2',
+        day: 'Jour 2',
         items: [
           { id: 'd2l1', name: 'Lab 1 — Stored XSS',
-            vuln: 'Persistent script injection on an admin dashboard',
+            vuln: 'Injection de script persistante sur un dashboard admin',
             walkthroughs: [
-              { lang: 'EN', src: 'day2/lab1-xss/walkthrough.html' },
               { lang: 'FR', src: 'day2/lab1-xss/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day2/lab1-xss/walkthrough.html' },
             ] },
-          { id: 'd2l2', name: 'Lab 2 — SQL Injection',
-            vuln: 'Authentication bypass via concatenated SQL',
-            walkthroughs: [{ lang: 'EN', src: 'day2/lab2-sqli/walkthrough.html' }] },
+          { id: 'd2l2', name: 'Lab 2 — Injection SQL',
+            vuln: 'Contournement d’authentification via SQL concaténé',
+            walkthroughs: [
+              { lang: 'FR', src: 'day2/lab2-sqli/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day2/lab2-sqli/walkthrough.html' },
+            ] },
         ],
       },
       {
-        day: 'Day 3',
+        day: 'Jour 3',
         items: [
-          { id: 'd3l3', name: 'Lab 3 — Password Reset Flaw',
-            vuln: 'Weak reset token leads to account takeover',
-            walkthroughs: [{ lang: 'EN', src: 'day3/lab3-password-reset/walkthrough.html' }] },
-          { id: 'd3l4', name: 'Lab 4 — 2FA Bypass',
-            vuln: 'Second factor that does not gate the session',
-            walkthroughs: [{ lang: 'EN', src: 'day3/lab4-2fa-bypass/walkthrough.html' }] },
-          { id: 'd3l4b', name: 'Lab 4B — Host Header Reset Poisoning',
-            vuln: 'Reset link domain controlled by the Host header',
-            walkthroughs: [{ lang: 'EN', src: 'day3/lab4b-host-header-reset/walkthrough.html' }] },
+          { id: 'd3l3', name: 'Lab 3 — Reset de mot de passe défaillant',
+            vuln: 'Token de reset mal lié au compte cible',
+            walkthroughs: [
+              { lang: 'FR', src: 'day3/lab3-password-reset/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day3/lab3-password-reset/walkthrough.html' },
+            ] },
+          { id: 'd3l4', name: 'Lab 4 — Contournement 2FA',
+            vuln: 'Second facteur qui ne verrouille pas la session',
+            walkthroughs: [
+              { lang: 'FR', src: 'day3/lab4-2fa-bypass/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day3/lab4-2fa-bypass/walkthrough.html' },
+            ] },
+          { id: 'd3l4b', name: 'Lab 4B — Host Header Poisoning',
+            vuln: 'Domaine du lien de reset contrôlé par l’en-tête Host',
+            walkthroughs: [
+              { lang: 'FR', src: 'day3/lab4b-host-header-reset/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day3/lab4b-host-header-reset/walkthrough.html' },
+            ] },
         ],
       },
       {
-        day: 'Day 4',
+        day: 'Jour 4',
         items: [
-          { id: 'd4l5', name: 'Lab 5 — Store Price Manipulation',
-            vuln: 'Client-supplied price trusted at checkout',
-            walkthroughs: [{ lang: 'EN', src: 'day4/lab5-store-price-manipulation/walkthrough.html' }] },
-          { id: 'd4l6', name: 'Lab 6 — Bank Transfer Race Condition',
-            vuln: 'Concurrent transfers bypass balance check',
-            walkthroughs: [{ lang: 'EN', src: 'day4/lab6-bank-race-condition/walkthrough.html' }] },
-          { id: 'd4l7', name: 'Lab 7 — Weather SSRF',
-            vuln: 'Server-side fetch reachable to internal targets',
-            walkthroughs: [{ lang: 'EN', src: 'day4/lab7-weather-ssrf/walkthrough.html' }] },
+          { id: 'd4l5', name: 'Lab 5 — Manipulation de prix',
+            vuln: 'Prix fourni par le client validé au checkout',
+            walkthroughs: [
+              { lang: 'FR', src: 'day4/lab5-store-price-manipulation/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day4/lab5-store-price-manipulation/walkthrough.html' },
+            ] },
+          { id: 'd4l6', name: 'Lab 6 — Race condition virement bancaire',
+            vuln: 'Virements concurrents qui contournent le contrôle de solde',
+            walkthroughs: [
+              { lang: 'FR', src: 'day4/lab6-bank-race-condition/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day4/lab6-bank-race-condition/walkthrough.html' },
+            ] },
+          { id: 'd4l7', name: 'Lab 7 — SSRF météo',
+            vuln: 'Requête côté serveur qui atteint des cibles internes',
+            walkthroughs: [
+              { lang: 'FR', src: 'day4/lab7-weather-ssrf/walkthrough-fr.html' },
+              { lang: 'EN', src: 'day4/lab7-weather-ssrf/walkthrough.html' },
+            ] },
         ],
       },
     ];
@@ -303,7 +330,7 @@
       document.querySelectorAll('.lab').forEach(el => {
         el.classList.toggle('active', el.dataset.id === id);
       });
-      document.title = `${lab.name} · Security Training Labs`;
+      document.title = `${lab.name} · Labs de Sécurité`;
     }
 
     function fromHash() {
