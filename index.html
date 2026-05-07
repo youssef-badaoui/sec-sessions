@@ -175,8 +175,8 @@
 <body>
   <aside>
     <div class="brand">
-      <h1>Labs de Sécurité</h1>
-      <p>Formation sécurité au niveau du code, pour les équipes de dev clientes.<br>
+      <h1>Labs de Sécurité de code</h1>
+      <p>Formation sécurité au niveau du code.<br>
          Techso Group · par Youssef Badaoui</p>
     </div>
     <nav id="nav"></nav>
@@ -201,13 +201,13 @@
       {
         day: 'Jour 1',
         items: [
-          { id: 'd1l1', name: 'Lab 1 — Contrôle d’accès défaillant',
+          { id: 'd1l1', name: 'Lab 1: Contrôle d’accès défaillant',
             vuln: 'Altération du portefeuille via un endpoint admin non protégé',
             walkthroughs: [
               { lang: 'FR', src: 'day1/lab1-broken-access-control/walkthrough-fr.html' },
               { lang: 'EN', src: 'day1/lab1-broken-access-control/walkthrough.html' },
             ] },
-          { id: 'd1l2', name: 'Lab 2 — IDOR mise à jour mot de passe',
+          { id: 'd1l2', name: 'Lab 2: IDOR mise à jour mot de passe',
             vuln: 'Prise de contrôle de compte via un paramètre de body',
             walkthroughs: [
               { lang: 'FR', src: 'day1/lab2-idor-password/walkthrough-fr.html' },
@@ -218,13 +218,13 @@
       {
         day: 'Jour 2',
         items: [
-          { id: 'd2l1', name: 'Lab 1 — Stored XSS',
+          { id: 'd2l1', name: 'Lab 1: Stored XSS',
             vuln: 'Injection de script persistante sur un dashboard admin',
             walkthroughs: [
               { lang: 'FR', src: 'day2/lab1-xss/walkthrough-fr.html' },
               { lang: 'EN', src: 'day2/lab1-xss/walkthrough.html' },
             ] },
-          { id: 'd2l2', name: 'Lab 2 — Injection SQL',
+          { id: 'd2l2', name: 'Lab 2: Injection SQL',
             vuln: 'Contournement d’authentification via SQL concaténé',
             walkthroughs: [
               { lang: 'FR', src: 'day2/lab2-sqli/walkthrough-fr.html' },
@@ -235,19 +235,19 @@
       {
         day: 'Jour 3',
         items: [
-          { id: 'd3l3', name: 'Lab 3 — Reset de mot de passe défaillant',
+          { id: 'd3l3', name: 'Lab 3: Reset de mot de passe défaillant',
             vuln: 'Token de reset mal lié au compte cible',
             walkthroughs: [
               { lang: 'FR', src: 'day3/lab3-password-reset/walkthrough-fr.html' },
               { lang: 'EN', src: 'day3/lab3-password-reset/walkthrough.html' },
             ] },
-          { id: 'd3l4', name: 'Lab 4 — Contournement 2FA',
+          { id: 'd3l4', name: 'Lab 4: Contournement 2FA',
             vuln: 'Second facteur qui ne verrouille pas la session',
             walkthroughs: [
               { lang: 'FR', src: 'day3/lab4-2fa-bypass/walkthrough-fr.html' },
               { lang: 'EN', src: 'day3/lab4-2fa-bypass/walkthrough.html' },
             ] },
-          { id: 'd3l4b', name: 'Lab 4B — Host Header Poisoning',
+          { id: 'd3l4b', name: 'Lab 4B: Host Header Poisoning',
             vuln: 'Domaine du lien de reset contrôlé par l’en-tête Host',
             walkthroughs: [
               { lang: 'FR', src: 'day3/lab4b-host-header-reset/walkthrough-fr.html' },
@@ -258,19 +258,19 @@
       {
         day: 'Jour 4',
         items: [
-          { id: 'd4l5', name: 'Lab 5 — Manipulation de prix',
+          { id: 'd4l5', name: 'Lab 5: Manipulation de prix',
             vuln: 'Prix fourni par le client validé au checkout',
             walkthroughs: [
               { lang: 'FR', src: 'day4/lab5-store-price-manipulation/walkthrough-fr.html' },
               { lang: 'EN', src: 'day4/lab5-store-price-manipulation/walkthrough.html' },
             ] },
-          { id: 'd4l6', name: 'Lab 6 — Race condition virement bancaire',
+          { id: 'd4l6', name: 'Lab 6: Race condition virement bancaire',
             vuln: 'Virements concurrents qui contournent le contrôle de solde',
             walkthroughs: [
               { lang: 'FR', src: 'day4/lab6-bank-race-condition/walkthrough-fr.html' },
               { lang: 'EN', src: 'day4/lab6-bank-race-condition/walkthrough.html' },
             ] },
-          { id: 'd4l7', name: 'Lab 7 — SSRF météo',
+          { id: 'd4l7', name: 'Lab 7: SSRF météo',
             vuln: 'Requête côté serveur qui atteint des cibles internes',
             walkthroughs: [
               { lang: 'FR', src: 'day4/lab7-weather-ssrf/walkthrough-fr.html' },
