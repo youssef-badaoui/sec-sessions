@@ -1,92 +1,48 @@
 # Security Training Labs
 
-Hands-on security training platform — 3 days, 8 vulnerability labs. Each lab is a standalone Docker containerized web app with an intentional vulnerability.
+Hands-on code-level security training for client dev teams.
+Built and maintained by **Youssef Badaoui**, cybersecurity consultant at **Techso Group**.
+
+4 days, 10 labs. Each lab is a standalone Dockerized Flask app with one intentional vulnerability, a guide, and a walkthrough.
 
 ## Labs
 
 | Day | Lab | Vulnerability | Port(s) | Directory |
 |-----|-----|--------------|---------|-----------|
-| 1 | Lab 1 | Stored XSS | 5001 | `day1/lab1-xss/` |
-| 1 | Lab 2 | SQL Injection (Auth Bypass) | 5002 | `day1/lab2-sqli/` |
-| 2 | Lab 3 | Password Reset Flaw | 5003, 5013 (mailbox) | `day2/lab3-password-reset/` |
-| 2 | Lab 4 | 2FA Bypass | 5004, 5014 (mailbox) | `day2/lab4-2fa-bypass/` |
-| 2 | Lab 4B | Reset Link Host Header Poisoning | 5007, 5017 (mailbox) | `day2/lab4b-host-header-reset/` |
-| 3 | Lab 5 | Store Price Manipulation | 5005 | `day3/lab5-store-price-manipulation/` |
-| 3 | Lab 6 | Bank Transfer Race Condition | 5006 | `day3/lab6-bank-race-condition/` |
-| 3 | Lab 7 | Weather SSRF | 5008, 7777 (internal files) | `day3/lab7-weather-ssrf/` |
+| 1 | Lab 1 | Broken Access Control (Wallet Tampering) | 5009 | `day1/lab1-broken-access-control/` |
+| 1 | Lab 2 | IDOR Password Update | 5010 | `day1/lab2-idor-password/` |
+| 2 | Lab 1 | Stored XSS | 5001 | `day2/lab1-xss/` |
+| 2 | Lab 2 | SQL Injection (Auth Bypass) | 5002 | `day2/lab2-sqli/` |
+| 3 | Lab 3 | Password Reset Flaw | 5003, 5013 | `day3/lab3-password-reset/` |
+| 3 | Lab 4 | 2FA Bypass | 5004, 5014 | `day3/lab4-2fa-bypass/` |
+| 3 | Lab 4B | Reset Link Host Header Poisoning | 5007, 5017 | `day3/lab4b-host-header-reset/` |
+| 4 | Lab 5 | Store Price Manipulation | 5005 | `day4/lab5-store-price-manipulation/` |
+| 4 | Lab 6 | Bank Transfer Race Condition | 5006 | `day4/lab6-bank-race-condition/` |
+| 4 | Lab 7 | Weather SSRF | 5008, 7777 | `day4/lab7-weather-ssrf/` |
 
-## Quick Start
-
-Each lab runs independently with a single command:
+## Run a lab
 
 ```bash
-# Day 1
-cd day1/lab1-xss && docker compose up --build
-cd day1/lab2-sqli && docker compose up --build
-
-# Day 2
-cd day2/lab3-password-reset && docker compose up --build
-cd day2/lab4-2fa-bypass && docker compose up --build
-cd day2/lab4b-host-header-reset && docker compose up --build
-
-# Day 3
-cd day3/lab5-store-price-manipulation && docker compose up --build
-cd day3/lab6-bank-race-condition && docker compose up --build
-cd day3/lab7-weather-ssrf && docker compose up --build
+cd <lab-directory>
+docker compose up --build
 ```
 
-## Tech Stack
+## Credentials
 
-- **Backend:** Python Flask
-- **Frontend:** Plain HTML/CSS
-- **Database:** SQLite
-- **Containerization:** Docker + Docker Compose
+| Lab | User | Password |
+|-----|------|----------|
+| Day 1 Lab 1 | `admin` / `user` | `admin123` / `user123` |
+| Day 1 Lab 2 | `admin` / `user` | `admin123` / `user123` |
+| Day 2 Lab 1 | `admin` / `user` | `adminpass` / `password` |
+| Day 2 Lab 2 | `admin` / `employee` | `supersecretpassword` / `password123` |
+| Day 3 Lab 3 | `admin` / `user` | `unknownpassword` / `password` |
+| Day 3 Lab 4 | `admin` / `user` | `adminpass` / `password` |
+| Day 3 Lab 4B | `admin` / `user` | `unknownpassword` / `password` |
+| Day 4 Lab 5 | sign up | chosen at signup |
+| Day 4 Lab 6 | `alice` / `bob` | `password` / `password` |
 
-## Training Materials
+Day 3 labs use a separate mailbox UI on the second port; mailbox accounts mirror app credentials.
 
-Training material follows one pattern:
-- Each lab includes a short `guide.md` that points to a standalone `walkthrough.html`
-- The standalone walkthroughs cover the code path, exploitation flow, and fix
-- Day 1 Lab 1 also includes a French walkthrough: `walkthrough-fr.html`
+## Stack
 
-Available standalone walkthroughs:
-- `day1/lab1-xss/walkthrough.html`
-- `day1/lab1-xss/walkthrough-fr.html`
-- `day1/lab2-sqli/walkthrough.html`
-- `day2/lab3-password-reset/walkthrough.html`
-- `day2/lab4-2fa-bypass/walkthrough.html`
-- `day2/lab4b-host-header-reset/walkthrough.html`
-- `day3/lab5-store-price-manipulation/walkthrough.html`
-- `day3/lab6-bank-race-condition/walkthrough.html`
-- `day3/lab7-weather-ssrf/walkthrough.html`
-
-## Test Credentials
-
-| Lab | User | Password | Role |
-|-----|------|----------|------|
-| Lab 1 | `user` | `password` | user |
-| Lab 1 | `admin` | `adminpass` | admin |
-| Lab 2 | `admin` | `supersecretpassword` | admin |
-| Lab 2 | `employee` | `password123` | employee |
-| Lab 3 | `user` | `password` | user |
-| Lab 3 | `admin` | `unknownpassword` | admin |
-| Lab 4 | `user` | `password` | user |
-| Lab 4 | `admin` | `adminpass` | admin |
-| Lab 4B | `user` | `password` | user |
-| Lab 4B | `admin` | `unknownpassword` | admin |
-| Lab 5 | new account | chosen at signup | user |
-| Lab 6 | `alice` | `password` | user |
-| Lab 6 | `bob` | `password` | user |
-
-## Mailbox Accounts
-
-Day 2 mailbox-enabled labs now use separate mailbox accounts per user:
-
-| Lab | Mailbox User | Password |
-|-----|--------------|----------|
-| Lab 3 | `user` | `password` |
-| Lab 3 | `admin` | `unknownpassword` |
-| Lab 4 | `user` | `password` |
-| Lab 4 | `admin` | `adminpass` |
-| Lab 4B | `user` | `password` |
-| Lab 4B | `admin` | `unknownpassword` |
+Python Flask · SQLite · Docker Compose

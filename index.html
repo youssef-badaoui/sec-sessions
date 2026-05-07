@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Training Labs</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #11161d;
+      --text: #e5e7eb;
+      --muted: #a3acb9;
+      --line: #222a35;
+      --accent: #f59e0b;
+      --hover: #1a212c;
+      --active: #1f2733;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+    aside {
+      width: 300px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      overflow-y: auto;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand {
+      padding: 26px 24px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .brand p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.55;
+    }
+    nav { padding: 14px 12px 28px; }
+    .day-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: 14px 12px 6px;
+      font-weight: 700;
+    }
+    .lab {
+      display: block;
+      padding: 9px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.92rem;
+      line-height: 1.35;
+      border: 1px solid transparent;
+    }
+    .lab:hover { background: var(--hover); }
+    .lab.active {
+      background: var(--active);
+      border-color: var(--line);
+      color: var(--accent);
+    }
+    .lab .vuln {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 400;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .topbar {
+      padding: 12px 22px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .topbar .title {
+      font-size: 0.88rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .topbar .title strong {
+      color: var(--text);
+      margin-left: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.95rem;
+    }
+    .lang { display: flex; gap: 6px; }
+    .lang button {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .lang button.active { color: var(--accent); border-color: var(--accent); }
+    .lang button:hover { color: var(--text); }
+
+    #contentWrap { flex: 1; display: flex; min-height: 0; }
+    #contentWrap iframe {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: var(--bg);
+    }
+    #contentWrap.placeholder {
+      align-items: center;
+      justify-content: center;
+      padding: 48px 32px;
+    }
+    .placeholder-inner { max-width: 560px; }
+    .placeholder-inner h2 {
+      font-size: 1.7rem;
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+    .placeholder-inner p {
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 14px;
+      font-size: 0.98rem;
+    }
+    .placeholder-inner .stat {
+      display: inline-block;
+      font-size: 0.74rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      body { flex-direction: column; }
+      aside {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      #contentWrap { min-height: 70vh; }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="brand">
+      <h1>Security Training Labs</h1>
+      <p>Code-level security training for client dev teams.<br>
+         Techso Group · by Youssef Badaoui</p>
+    </div>
+    <nav id="nav"></nav>
+  </aside>
+  <main>
+    <div class="topbar">
+      <div class="title" id="topTitle">Select a lab</div>
+      <div class="lang" id="lang"></div>
+    </div>
+    <div id="contentWrap" class="placeholder">
+      <div class="placeholder-inner">
+        <span class="stat">4 days · 10 labs</span>
+        <h2>Welcome.</h2>
+        <p>Each lab is a self-contained Dockerized Flask app with one intentional vulnerability, a reproduction path, and a fix.</p>
+        <p>Pick a lab on the left — its walkthrough opens here. To run a lab locally, follow the README quick-start.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const groups = [
+      {
+        day: 'Day 1',
+        items: [
+          { id: 'd1l1', name: 'Lab 1 — Broken Access Control',
+            vuln: 'Wallet tampering via an unprotected admin endpoint',
+            walkthroughs: [{ lang: 'EN', src: 'day1/lab1-broken-access-control/walkthrough.html' }] },
+          { id: 'd1l2', name: 'Lab 2 — IDOR Password Update',
+            vuln: 'Account takeover via a trusted body parameter',
+            walkthroughs: [{ lang: 'EN', src: 'day1/lab2-idor-password/walkthrough.html' }] },
+        ],
+      },
+      {
+        day: 'Day 2',
+        items: [
+          { id: 'd2l1', name: 'Lab 1 — Stored XSS',
+            vuln: 'Persistent script injection on an admin dashboard',
+            walkthroughs: [
+              { lang: 'EN', src: 'day2/lab1-xss/walkthrough.html' },
+              { lang: 'FR', src: 'day2/lab1-xss/walkthrough-fr.html' },
+            ] },
+          { id: 'd2l2', name: 'Lab 2 — SQL Injection',
+            vuln: 'Authentication bypass via concatenated SQL',
+            walkthroughs: [{ lang: 'EN', src: 'day2/lab2-sqli/walkthrough.html' }] },
+        ],
+      },
+      {
+        day: 'Day 3',
+        items: [
+          { id: 'd3l3', name: 'Lab 3 — Password Reset Flaw',
+            vuln: 'Weak reset token leads to account takeover',
+            walkthroughs: [{ lang: 'EN', src: 'day3/lab3-password-reset/walkthrough.html' }] },
+          { id: 'd3l4', name: 'Lab 4 — 2FA Bypass',
+            vuln: 'Second factor that does not gate the session',
+            walkthroughs: [{ lang: 'EN', src: 'day3/lab4-2fa-bypass/walkthrough.html' }] },
+          { id: 'd3l4b', name: 'Lab 4B — Host Header Reset Poisoning',
+            vuln: 'Reset link domain controlled by the Host header',
+            walkthroughs: [{ lang: 'EN', src: 'day3/lab4b-host-header-reset/walkthrough.html' }] },
+        ],
+      },
+      {
+        day: 'Day 4',
+        items: [
+          { id: 'd4l5', name: 'Lab 5 — Store Price Manipulation',
+            vuln: 'Client-supplied price trusted at checkout',
+            walkthroughs: [{ lang: 'EN', src: 'day4/lab5-store-price-manipulation/walkthrough.html' }] },
+          { id: 'd4l6', name: 'Lab 6 — Bank Transfer Race Condition',
+            vuln: 'Concurrent transfers bypass balance check',
+            walkthroughs: [{ lang: 'EN', src: 'day4/lab6-bank-race-condition/walkthrough.html' }] },
+          { id: 'd4l7', name: 'Lab 7 — Weather SSRF',
+            vuln: 'Server-side fetch reachable to internal targets',
+            walkthroughs: [{ lang: 'EN', src: 'day4/lab7-weather-ssrf/walkthrough.html' }] },
+        ],
+      },
+    ];
+
+    const nav = document.getElementById('nav');
+    const contentWrap = document.getElementById('contentWrap');
+    const topTitle = document.getElementById('topTitle');
+    const langBox = document.getElementById('lang');
+
+    const labIndex = {};
+    groups.forEach(group => {
+      const label = document.createElement('div');
+      label.className = 'day-label';
+      label.textContent = group.day;
+      nav.appendChild(label);
+      group.items.forEach(item => {
+        labIndex[item.id] = { ...item, day: group.day };
+        const a = document.createElement('a');
+        a.className = 'lab';
+        a.href = '#' + item.id;
+        a.dataset.id = item.id;
+        a.innerHTML = `${item.name}<span class="vuln">${item.vuln}</span>`;
+        nav.appendChild(a);
+      });
+    });
+
+    function show(id, lang) {
+      const lab = labIndex[id];
+      if (!lab) return;
+      const w = (lang && lab.walkthroughs.find(x => x.lang === lang)) || lab.walkthroughs[0];
+
+      contentWrap.className = '';
+      contentWrap.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.src = w.src;
+      iframe.title = lab.name;
+      contentWrap.appendChild(iframe);
+
+      topTitle.innerHTML = `${lab.day} <strong>${lab.name.replace(/^Lab \d+\w* — /, '')}</strong>`;
+
+      langBox.innerHTML = '';
+      if (lab.walkthroughs.length > 1) {
+        lab.walkthroughs.forEach(opt => {
+          const b = document.createElement('button');
+          b.textContent = opt.lang;
+          if (opt.lang === w.lang) b.classList.add('active');
+          b.addEventListener('click', () => show(id, opt.lang));
+          langBox.appendChild(b);
+        });
+      }
+
+      document.querySelectorAll('.lab').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+      document.title = `${lab.name} · Security Training Labs`;
+    }
+
+    function fromHash() {
+      const h = location.hash.replace('#', '');
+      if (labIndex[h]) show(h);
+    }
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+  </script>
+</body>
+</html>
