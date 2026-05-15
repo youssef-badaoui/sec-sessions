@@ -24,7 +24,7 @@ Built and maintained by **Youssef Badaoui**, cybersecurity consultant at **Techs
 
 ```bash
 cd <lab-directory>
-docker compose up --build
+bash build.sh
 ```
 
 ## Credentials
