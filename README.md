@@ -22,9 +22,18 @@ Built and maintained by **Youssef Badaoui**, cybersecurity consultant at **Techs
 
 ## Run a lab
 
+Linux / macOS:
+
 ```bash
 cd <lab-directory>
 bash build.sh
+```
+
+Windows (PowerShell):
+
+```powershell
+cd <lab-directory>
+.\build.ps1
 ```
 
 ## Credentials
